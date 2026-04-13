@@ -24,6 +24,7 @@ DATA_DIR="pointnet.pytorch/data"
 DATASET_DIR="${DATA_DIR}/modelnet40_ply_hdf5_2048"
 ZIP_PATH="${DATA_DIR}/modelnet40_ply_hdf5_2048.zip"
 MIRROR_TIMEOUT_SECONDS="${MIRROR_TIMEOUT_SECONDS:-90}"
+MIRROR_TOTAL_TIMEOUT_SECONDS="${MIRROR_TOTAL_TIMEOUT_SECONDS:-600}"
 
 if [ -d "${DATASET_DIR}" ]; then
   echo "ModelNet40 dataset already exists, skip download."
@@ -40,18 +41,23 @@ else
   for mirror in "${mirrors[@]}"; do
     rm -f "${ZIP_PATH}"
     echo "Trying mirror: ${mirror}"
-    if python - "$mirror" "${ZIP_PATH}" "${MIRROR_TIMEOUT_SECONDS}" <<'PY'
+    if python - "$mirror" "${ZIP_PATH}" "${MIRROR_TIMEOUT_SECONDS}" "${MIRROR_TOTAL_TIMEOUT_SECONDS}" <<'PY'
 import sys
+import time
 import urllib.request
 import os
 
 url = sys.argv[1]
 dst = sys.argv[2]
-timeout = int(sys.argv[3])
+connect_timeout = int(sys.argv[3])
+total_timeout = int(sys.argv[4])
+start_time = time.monotonic()
 
 try:
-    with urllib.request.urlopen(url, timeout=timeout) as response, open(dst, "wb") as f:
+    with urllib.request.urlopen(url, timeout=connect_timeout) as response, open(dst, "wb") as f:
         while True:
+            if time.monotonic() - start_time > total_timeout:
+                raise TimeoutError(f"total download timeout exceeded: {total_timeout}s")
             chunk = response.read(1024 * 1024)
             if not chunk:
                 break
@@ -60,8 +66,8 @@ except Exception as e:
     try:
         if os.path.exists(dst):
             os.remove(dst)
-    except OSError:
-        pass
+    except OSError as remove_error:
+        print(f"[cleanup-error] failed to remove partial file: {remove_error}", file=sys.stderr)
     print(f"[download-error] {e}", file=sys.stderr)
     sys.exit(1)
 PY

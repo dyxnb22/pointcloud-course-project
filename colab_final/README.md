@@ -8,7 +8,7 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 
 根据 [`README.md`](../README.md) 中的两阶段说明：
 
-- **第一阶段（本目录负责）**：在 Google Colab（T4 GPU）上完成环境搞建、PointNet Baseline 训练、进阶修改（数据增强 + SE-Attention）以及 SOTA 对比实验（DGCNN）。
+- **第一阶段（本目录负责）**：在 Google Colab（T4 GPU）上完成环境搭建、PointNet Baseline 训练、进阶修改（数据增强 + SE-Attention）以及 SOTA 对比实验（DGCNN）。
 - **第二阶段**：收集训练日志、整理实验结果对比表、MeshLab 可视化与误分类分析，最终形成报告与展示材料。
 
 `colab_final/` 是第一阶段工作的**集中收尾版本**，将环境准备、Baseline 训练、DGCNN 对比训练三个核心步骤整合为可一键复现的脚本入口，便于课程最终提交时统一复现。

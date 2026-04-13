@@ -41,7 +41,6 @@ else
     rm -f "${ZIP_PATH}"
     echo "Trying mirror: ${mirror}"
     if python - "$mirror" "${ZIP_PATH}" "${MIRROR_TIMEOUT_SECONDS}" <<'PY'
-import socket
 import sys
 import urllib.request
 import os
@@ -49,7 +48,6 @@ import os
 url = sys.argv[1]
 dst = sys.argv[2]
 timeout = int(sys.argv[3])
-socket.setdefaulttimeout(timeout)
 
 try:
     with urllib.request.urlopen(url, timeout=timeout) as response, open(dst, "wb") as f:
@@ -83,6 +81,7 @@ PY
     echo "Error: failed to extract dataset archive: ${ZIP_PATH}" >&2
     exit 1
   fi
+  rm -f "${ZIP_PATH}"
 fi
 
 if [ ! -d "${DATASET_DIR}" ]; then

@@ -56,7 +56,7 @@ start_time = time.monotonic()
 try:
     with urllib.request.urlopen(url, timeout=connect_timeout) as response, open(dst, "wb") as f:
         while True:
-            if time.monotonic() - start_time > total_timeout:
+            if time.monotonic() - start_time >= total_timeout:
                 raise TimeoutError(f"total download timeout exceeded: {total_timeout}s")
             chunk = response.read(1024 * 1024)
             if not chunk:
@@ -79,7 +79,7 @@ PY
   done
 
   if [ "${downloaded}" -ne 1 ]; then
-    echo "Error: all dataset mirrors failed (timeout=${MIRROR_TIMEOUT_SECONDS}s)." >&2
+    echo "Error: all dataset mirrors failed (connect-timeout=${MIRROR_TIMEOUT_SECONDS}s, total-timeout=${MIRROR_TOTAL_TIMEOUT_SECONDS}s)." >&2
     exit 1
   fi
 

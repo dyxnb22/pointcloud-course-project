@@ -4,8 +4,8 @@
 
 ## 主要修改
 
-- `dataset.py` 中增加 `random_rotate_point_cloud` 函数
-- `dataset.py` 中增加 `jitter_point_cloud` 函数
+- [`dataset.py`](dataset.py) 中实现 `random_rotate_point_cloud` 函数（沿 Z 轴随机旋转）
+- [`dataset.py`](dataset.py) 中实现 `jitter_point_cloud` 函数（高斯噪声抖动加噪）
 
 ## 记录指标
 

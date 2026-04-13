@@ -4,7 +4,8 @@
 
 ## 主要修改
 
-- `pointnet.py` 特征提取层后添加 SE-Block 模块
+- [`pointnet_se.py`](pointnet_se.py) 中实现 `SEBlock` 通道注意力模块
+- [`pointnet_se.py`](pointnet_se.py) 中实现 `PointNetSE` 网络（在全局最大池化后插入 SE-Block）
 - 继续使用数据增强
 
 ## SE-Block 参考结构

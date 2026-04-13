@@ -4,8 +4,8 @@
 
 ## 主要修改
 
-- `dataset.py` 中增加 `random_rotate_point_cloud` 函数
-- `dataset.py` 中增加 `jitter_point_cloud` 函数
+- `dataset.py` 中增加 `random_rotate_point_cloud` 函数（实现见 [`dataset.py`](dataset.py)）
+- `dataset.py` 中增加 `jitter_point_cloud` 函数（实现见 [`dataset.py`](dataset.py)）
 
 ## 记录指标
 

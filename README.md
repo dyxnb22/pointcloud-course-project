@@ -179,6 +179,12 @@ bash scripts/train_dgcnn.sh
 
 ---
 
+## 9. 功能实现清单
+
+各文件的数据增强（有/无）和代码增强归属，详见：[`docs/功能清单.md`](docs/功能清单.md)。
+
+---
+
 ## 参考资料
 
 - [PointNet.pytorch](https://github.com/fxia22/pointnet.pytorch)

@@ -4,7 +4,7 @@
 
 ## 主要修改
 
-- `pointnet.py` 特征提取层后添加 SE-Block 模块
+- `pointnet.py` 特征提取层后添加 SE-Block 模块（实现见 [`pointnet.py`](pointnet.py)）
 - 继续使用数据增强
 
 ## SE-Block 参考结构
@@ -29,3 +29,4 @@ class SEBlock(nn.Module):
 
 - 最终 Accuracy：
 - 相比数据增强实验变化：
+

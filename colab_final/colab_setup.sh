@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# colab_setup.sh — Clone repos and install dependencies on Google Colab (T4 GPU)
+# colab_setup.sh - Clone repos and install dependencies on Google Colab (T4 GPU)
 set -e
 
 echo "==> Cloning PointNet..."

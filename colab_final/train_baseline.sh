@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# train_baseline.sh — Train PointNet baseline on ModelNet40
+# train_baseline.sh - Train PointNet baseline on ModelNet40
 set -e
 
 python pointnet.pytorch/utils/train_classification.py \

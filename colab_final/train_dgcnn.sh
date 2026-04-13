@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# train_dgcnn.sh — Train DGCNN on ModelNet40 for SOTA comparison
+# train_dgcnn.sh - Train DGCNN on ModelNet40 for SOTA comparison
 set -e
 
 cd dgcnn/pytorch

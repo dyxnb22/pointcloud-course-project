@@ -4,9 +4,9 @@
 
 ## 文件说明
 
-- `colab_setup.sh`：一键克隆依赖仓库并安装环境，同时下载 ModelNet40 数据集
-- `train_baseline.sh`：运行 PointNet Baseline 训练
-- `train_dgcnn.sh`：运行 DGCNN 对比实验训练
+- `colab_setup.sh`: 一键克隆依赖仓库并安装环境，同时下载 ModelNet40 数据集
+- `train_baseline.sh`: 运行 PointNet Baseline 训练
+- `train_dgcnn.sh`: 运行 DGCNN 对比实验训练
 
 ## 建议使用顺序（Colab）
 

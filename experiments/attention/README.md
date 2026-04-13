@@ -4,8 +4,25 @@
 
 ## 主要修改
 
-- `pointnet.py` 特征提取层后添加 SE-Block 模块
-- 继续使用数据增强
+- [`pointnet_attention.py`](pointnet_attention.py) 中实现 `SEBlock`（通道 Squeeze-and-Excitation）
+- [`pointnet_attention.py`](pointnet_attention.py) 中实现 `PointNetFeatSE`（在全局特征 1024-d 后插入 SE-Block）
+- [`pointnet_attention.py`](pointnet_attention.py) 中实现 `PointNetClsSE`（完整分类网络，含数据增强）
+- 继续使用 `experiments/augmentation/dataset_augmented.py` 中的数据增强
+
+## 运行方式
+
+```bash
+bash colab_final/train_attention.sh
+```
+
+或直接调用：
+
+```bash
+python experiments/attention/pointnet_attention.py \
+  --dataset pointnet.pytorch/data/modelnet40_ply_hdf5_2048 \
+  --nepoch 20 \
+  --outdir results/attention
+```
 
 ## SE-Block 参考结构
 

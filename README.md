@@ -75,8 +75,10 @@ bash scripts/colab_setup.sh
 ### 2.1 下载数据集
 
 ```bash
-!cd pointnet.pytorch/scripts && bash download.sh
+bash scripts/colab_setup.sh
 ```
+
+> `colab_setup.sh` 已内置多镜像下载与超时自动回退机制，避免单一源站卡住。
 
 ### 2.2 训练命令
 

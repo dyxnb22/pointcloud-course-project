@@ -3,6 +3,6 @@
 set -e
 
 python pointnet.pytorch/utils/train_classification.py \
-  --dataset pointnet.pytorch/shapenetcore_partanno_segmentation_benchmark_v0 \
+  --dataset pointnet.pytorch/data/modelnet40_ply_hdf5_2048 \
   --nepoch=20 \
   --dataset_type modelnet40

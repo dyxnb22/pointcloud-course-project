@@ -38,11 +38,13 @@ else
 
   downloaded=0
   for mirror in "${mirrors[@]}"; do
+    rm -f "${ZIP_PATH}"
     echo "Trying mirror: ${mirror}"
     if python - "$mirror" "${ZIP_PATH}" "${MIRROR_TIMEOUT_SECONDS}" <<'PY'
 import socket
 import sys
 import urllib.request
+import os
 
 url = sys.argv[1]
 dst = sys.argv[2]
@@ -57,6 +59,11 @@ try:
                 break
             f.write(chunk)
 except Exception as e:
+    try:
+        if os.path.exists(dst):
+            os.remove(dst)
+    except OSError:
+        pass
     print(f"[download-error] {e}", file=sys.stderr)
     sys.exit(1)
 PY
@@ -72,7 +79,10 @@ PY
     exit 1
   fi
 
-  unzip -oq "${ZIP_PATH}" -d "${DATA_DIR}"
+  if ! unzip -oq "${ZIP_PATH}" -d "${DATA_DIR}"; then
+    echo "Error: failed to extract dataset archive: ${ZIP_PATH}" >&2
+    exit 1
+  fi
 fi
 
 if [ ! -d "${DATASET_DIR}" ]; then

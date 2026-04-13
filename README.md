@@ -14,6 +14,7 @@ pointcloud-course-project/
 ├── README.md
 ├── .gitignore
 ├── requirements.txt
+├── colab_final/        # Colab 最终运行代码集中目录（提交入口）
 ├── notebooks/          # Google Colab 笔记本
 ├── scripts/            # 一键运行脚本
 │   ├── colab_setup.sh
@@ -28,6 +29,19 @@ pointcloud-course-project/
 ├── assets/meshlab/     # MeshLab 可视化截图
 └── report/             # 报告与 PPT 素材
 ```
+
+---
+
+## Colab 最终提交入口
+
+如需将“最终在 Colab 运行的代码”统一放在一个目录，请直接使用 [`colab_final/`](colab_final/)。
+
+该目录内已集中放置可直接执行的关键脚本，并附带使用说明文档：
+
+- `colab_final/README.md`
+- `colab_final/colab_setup.sh`
+- `colab_final/train_baseline.sh`
+- `colab_final/train_dgcnn.sh`
 
 ---
 

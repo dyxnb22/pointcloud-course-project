@@ -1,0 +1,5 @@
+experiment,accuracy,notes
+baseline_pointnet,,
+pointnet_plus_augmentation,,
+pointnet_plus_augmentation_plus_se,,
+dgcnn_sota,,

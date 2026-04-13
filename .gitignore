@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter / Colab
+.ipynb_checkpoints/
+*.ipynb~
+
+# Logs and temporary output
+*.log
+*.tmp
+*.out
+
+# Model checkpoints (large files; commit selectively or use Git LFS)
+# *.pth
+
+# OS artifacts
+.DS_Store
+Thumbs.db

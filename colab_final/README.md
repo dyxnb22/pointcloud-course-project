@@ -1,5 +1,7 @@
 # Colab 最终运行文件夹说明
 
+English: This folder is the consolidated Colab-ready entry for final submission.
+
 这个文件夹用于集中放置“最终在 Google Colab 上运行”的代码与脚本，便于直接提交与复现。
 
 ## 文件说明

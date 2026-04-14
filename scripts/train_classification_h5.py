@@ -85,7 +85,7 @@ class ModelNetH5Dataset(torch.utils.data.Dataset):
         if os.path.isfile(shape_names):
             with open(shape_names, "r", encoding="utf-8") as f:
                 return [line.strip() for line in f if line.strip()]
-        max_label = int(self.label.max()) if len(self.label) else -1
+        max_label = int(self.label.max()) if self.label.size > 0 else -1
         return [str(i) for i in range(max_label + 1)]
 
     @staticmethod
@@ -174,7 +174,7 @@ def main():
     blue = lambda x: "\033[94m" + x + "\033[0m"
 
     for epoch in range(opt.nepoch):
-        scheduler.step()
+        test_iter = iter(testdataloader)
         for i, data in enumerate(dataloader, 0):
             points, target = data
             points = points.transpose(2, 1).to(device)
@@ -196,7 +196,11 @@ def main():
             )
 
             if i % 10 == 0:
-                points_t, target_t = next(iter(testdataloader))
+                try:
+                    points_t, target_t = next(test_iter)
+                except StopIteration:
+                    test_iter = iter(testdataloader)
+                    points_t, target_t = next(test_iter)
                 points_t = points_t.transpose(2, 1).to(device)
                 target_t = target_t.to(device)
                 classifier = classifier.eval()
@@ -217,6 +221,7 @@ def main():
                 )
 
         torch.save(classifier.state_dict(), "%s/cls_model_%d.pth" % (opt.outf, epoch))
+        scheduler.step()
 
     total_correct = 0
     total_testset = 0

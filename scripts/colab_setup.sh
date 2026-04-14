@@ -164,7 +164,8 @@ def download_file(url, dst):
     start_time = time.monotonic()
     try:
         with urllib.request.urlopen(url, timeout=connect_timeout) as response:
-            content_type = response.headers.get("Content-Type", "").lower()
+            content_type_header = response.headers.get("Content-Type", "")
+            content_type = content_type_header.lower()
             normalized_content_type = content_type.split(";", 1)[0].strip()
             allowed_content_types = {
                 "application/zip",
@@ -173,7 +174,7 @@ def download_file(url, dst):
             }
             if normalized_content_type and normalized_content_type not in allowed_content_types:
                 raise RuntimeError(
-                    f"Unexpected content type for {url}: {response.headers.get('Content-Type', '')}"
+                    f"Unexpected content type for {url}: {content_type_header}"
                 )
             timeout_reached = False
             with open(dst, "wb") as f:

@@ -173,7 +173,7 @@ def download_file(url, dst):
             content_type_header = response.headers.get("Content-Type", "")
             content_type_lower = content_type_header.lower()
             normalized_content_type = content_type_lower.split(";", 1)[0].strip()
-            if normalized_content_type and normalized_content_type not in ALLOWED_CONTENT_TYPES:
+            if normalized_content_type not in ALLOWED_CONTENT_TYPES:
                 raise RuntimeError(
                     f"Unexpected content type for {url}: {content_type_header}"
                 )

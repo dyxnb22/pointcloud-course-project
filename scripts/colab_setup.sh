@@ -58,8 +58,8 @@ except Exception as e:
     try:
         if os.path.exists(dst):
             os.remove(dst)
-    except OSError as cleanup_error:
-        print(f"[cleanup-warning] failed to remove partial file: {cleanup_error}", file=sys.stderr)
+    except OSError as cleanup_warning:
+        print(f"[cleanup-warning] failed to remove partial file: {cleanup_warning}", file=sys.stderr)
     print(f"[download-error] {e}", file=sys.stderr)
     sys.exit(1)
 PY
@@ -83,7 +83,9 @@ PY
 fi
 
 mkdir -p dgcnn/pytorch/data
-ln -sfn "$(pwd)/${MODELNET_DIR}" "dgcnn/pytorch/data/modelnet40_ply_hdf5_2048" || true
+if ! ln -sfn "$(pwd)/${MODELNET_DIR}" "dgcnn/pytorch/data/modelnet40_ply_hdf5_2048"; then
+  echo "Warning: failed to create ModelNet40 symlink for DGCNN." >&2
+fi
 
 if [ ! -d "${MODELNET_DIR}" ]; then
   echo "Error: ModelNet40 dataset directory not found: ${MODELNET_DIR}" >&2
@@ -169,7 +171,9 @@ PY
 fi
 
 mkdir -p pointnet.pytorch
-ln -sfn "$(pwd)/${SHAPENET_TARGET}" "${SHAPENET_COMPAT_TARGET}" || true
+if ! ln -sfn "$(pwd)/${SHAPENET_TARGET}" "${SHAPENET_COMPAT_TARGET}"; then
+  echo "Warning: failed to create ShapeNet compatibility symlink for PointNet." >&2
+fi
 
 if [ ! -d "${SHAPENET_TARGET}" ]; then
   echo "Error: ShapeNet dataset directory not found: ${SHAPENET_TARGET}" >&2

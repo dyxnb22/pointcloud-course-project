@@ -112,6 +112,8 @@ target_dir = sys.argv[2]
 token = os.environ.get("HF_TOKEN", os.environ.get("HUGGINGFACE_TOKEN", ""))
 temp_dir = os.path.join(data_dir, "temp_shapenet")
 os.makedirs(temp_dir, exist_ok=True)
+zip_name = "shapenetcore_partanno_segmentation_benchmark_v0.zip"
+manual_zip_env = os.environ.get("SHAPENET_ZIP_PATH", "").strip()
 
 mirrors = [
     "gourmet/ShapeNetCore_partanno_segmentation_benchmark_v0",
@@ -119,55 +121,91 @@ mirrors = [
     "jason233/ShapeNetCore_partanno_segmentation_benchmark_v0",
 ]
 
+def reset_temp_dir(work_dir):
+    shutil.rmtree(work_dir, ignore_errors=True)
+    os.makedirs(work_dir, exist_ok=True)
+
+def extract_and_organize(zip_path, source_name, work_dir, output_dir):
+    print(f"Using ShapeNet archive from {source_name}: {zip_path}")
+    reset_temp_dir(work_dir)
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        zf.extractall(work_dir)
+
+    os.makedirs(output_dir, exist_ok=True)
+    moved = False
+    for root, _, files in os.walk(work_dir):
+        if "synsetoffset2category.txt" in files:
+            for item in os.listdir(root):
+                src = os.path.join(root, item)
+                dst = os.path.join(output_dir, item)
+                if os.path.isdir(src):
+                    shutil.copytree(src, dst, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(src, dst)
+            moved = True
+            break
+
+    if not moved:
+        for item in os.listdir(work_dir):
+            src = os.path.join(work_dir, item)
+            dst = os.path.join(output_dir, item)
+            if os.path.isdir(src):
+                shutil.copytree(src, dst, dirs_exist_ok=True)
+            else:
+                shutil.copy2(src, dst)
+
 success = False
 try:
-    for repo in mirrors:
-        print(f"Trying ShapeNet mirror: {repo}")
+    local_zip_candidates = []
+    if manual_zip_env:
+        local_zip_candidates.append(os.path.expanduser(manual_zip_env))
+    local_zip_candidates.extend(
+        [
+            os.path.join(data_dir, zip_name),
+            os.path.join(os.getcwd(), zip_name),
+            os.path.join("/content", zip_name),
+        ]
+    )
+
+    checked = set()
+    for local_zip in local_zip_candidates:
+        if local_zip in checked:
+            continue
+        checked.add(local_zip)
+        if not os.path.isfile(local_zip):
+            continue
         try:
-            kwargs = {
-                "repo_id": repo,
-                "filename": "shapenetcore_partanno_segmentation_benchmark_v0.zip",
-                "repo_type": "dataset",
-            }
-            if token:
-                kwargs["token"] = token
-            zip_path = hf_hub_download(**kwargs)
-            with zipfile.ZipFile(zip_path, "r") as zf:
-                zf.extractall(temp_dir)
-
-            os.makedirs(target_dir, exist_ok=True)
-            moved = False
-            for root, _, files in os.walk(temp_dir):
-                if "synsetoffset2category.txt" in files:
-                    for item in os.listdir(root):
-                        src = os.path.join(root, item)
-                        dst = os.path.join(target_dir, item)
-                        if os.path.isdir(src):
-                            shutil.copytree(src, dst, dirs_exist_ok=True)
-                        else:
-                            shutil.copy2(src, dst)
-                    moved = True
-                    break
-
-            if not moved:
-                for item in os.listdir(temp_dir):
-                    src = os.path.join(temp_dir, item)
-                    dst = os.path.join(target_dir, item)
-                    if os.path.isdir(src):
-                        shutil.copytree(src, dst, dirs_exist_ok=True)
-                    else:
-                        shutil.copy2(src, dst)
+            extract_and_organize(local_zip, local_zip, temp_dir, target_dir)
             success = True
             break
         except Exception as e:
-            print(f"Mirror failed: {repo} ({e})", file=sys.stderr)
+            print(f"Local archive failed: {local_zip} ({e})", file=sys.stderr)
+
+    if not success:
+        for repo in mirrors:
+            print(f"Trying ShapeNet mirror: {repo}")
+            try:
+                kwargs = {
+                    "repo_id": repo,
+                    "filename": zip_name,
+                    "repo_type": "dataset",
+                }
+                if token:
+                    kwargs["token"] = token
+                zip_path = hf_hub_download(**kwargs)
+                extract_and_organize(zip_path, f"mirror {repo}", temp_dir, target_dir)
+                success = True
+                break
+            except Exception as e:
+                print(f"Mirror failed: {repo} ({e})", file=sys.stderr)
 finally:
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 if not success:
     print(
-        "Error: all ShapeNet mirrors failed during download/extract/organize. "
-        "If a mirror requires auth, set HF_TOKEN (or HUGGINGFACE_TOKEN) and retry.",
+        "Error: all ShapeNet mirrors and local archives failed. "
+        "You can manually upload shapenetcore_partanno_segmentation_benchmark_v0.zip "
+        "to the working directory, /content, or set SHAPENET_ZIP_PATH.",
         file=sys.stderr,
     )
     sys.exit(1)

@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
-# train_baseline.sh - Train PointNet baseline on ModelNet40
+# train_baseline.sh - 在 ShapeNet 上运行 PointNet 训练
 set -e
 
 if [ ! -d "pointnet.pytorch" ]; then
-  echo "Error: pointnet.pytorch not found. Please run: bash colab_final/colab_setup.sh"
+  echo "错误：找不到 pointnet.pytorch，请先运行: bash colab_final/colab_setup.sh"
   exit 1
 fi
 
-if [ ! -d "pointnet.pytorch/data/modelnet40_ply_hdf5_2048" ]; then
-  echo "Error: ModelNet40 dataset not found. Please run: bash colab_final/colab_setup.sh"
+DATASET_PATH="pointnet.pytorch/data/shapenetcore_partanno_segmentation_benchmark_v0"
+if [ ! -d "${DATASET_PATH}" ]; then
+  echo "错误：找不到数据集文件夹 ${DATASET_PATH}，请先运行: bash colab_final/colab_setup.sh"
   exit 1
 fi
 
+echo "==> 开始训练 PointNet 分类模型..."
 python pointnet.pytorch/utils/train_classification.py \
-  --dataset pointnet.pytorch/data/modelnet40_ply_hdf5_2048 \
+  --dataset "${DATASET_PATH}" \
   --nepoch=20 \
-  --dataset_type modelnet40
+  --dataset_type shapenet

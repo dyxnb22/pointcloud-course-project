@@ -78,7 +78,7 @@ bash scripts/colab_setup.sh
 bash scripts/colab_setup.sh
 ```
 
-> `colab_setup.sh` 已内置 ModelNet40/ShapeNet 多镜像下载与自动回退机制；如需访问私有 Hugging Face 资源，可提前设置 `HF_TOKEN`（或 `HUGGINGFACE_TOKEN`）环境变量。
+> `colab_setup.sh` 已内置 ModelNet40/ShapeNet 多镜像下载与自动回退机制；如需访问私有 Hugging Face 资源，可提前设置 `HF_TOKEN`（或 `HUGGINGFACE_TOKEN`）环境变量。若 ShapeNet 镜像全部失效，可手动上传 `shapenetcore_partanno_segmentation_benchmark_v0.zip` 到当前目录或 `/content`，或设置 `SHAPENET_ZIP_PATH` 指向该压缩包后重试。
 
 ### 2.2 训练命令
 

@@ -69,25 +69,22 @@ bash colab_final/train_advanced.sh
 
 ---
 
-## 需要填写的内容（Fill-in Template）
-
-运行完成后，请将以下数值/内容补充到报告或本 README 的 Results 章节：
-
-```
 ## Results（实验结果）
 
 ### 精度汇总
 
-| 方法 | 数据集 | 最终测试精度 | 论文报告精度 | 差距分析 |
-|------|--------|-------------|-------------|---------|
-| PointNet Baseline | ModelNet40 | __.__% | 89.2% | （填：偏高/偏低，原因） |
-| PointNet Baseline | ModelNet10 (cross-dataset) | __.__% | — | （填：泛化表现说明） |
-| DGCNN | ModelNet40 | __.__% | 92.9% | （填：偏高/偏低，原因） |
-| PointNet Advanced (2.2) | ModelNet40 | __.__% | — | （填：与 baseline 对比） |
+| 方法                    | 数据集                     | 最终测试精度 | 论文报告精度 | 差距分析                 |
+| ----------------------- | -------------------------- | ------------ | ------------ | ------------------------ |
+| PointNet Baseline       | ModelNet40                 | 74.9%        | 89.2%        | （填：偏高/偏低，原因）  |
+| PointNet Baseline       | ModelNet10 (cross-dataset) | 82.7%        | —            | （填：泛化表现说明）     |
+| DGCNN                   | ModelNet40                 | 84.7%        | 92.9%        | （填：偏高/偏低，原因）  |
+| PointNet Advanced (2.2) | ModelNet40                 | 77.6%        | —            | （填：与 baseline 对比） |
 
 ### 训练曲线对比（Baseline vs Advanced）
 
-（在此粘贴或描述 loss/accuracy 曲线对比结果，或说明 metrics.csv 中的关键数字）
+![curve_compare](curve_compare.png)
+
+
 
 ### 论文结果对比分析
 
@@ -103,9 +100,6 @@ bash colab_final/train_advanced.sh
 
 （填：label smoothing + scale augment + feature transform 带来了多少精度提升？
  分析每项改动的贡献，是否符合预期，原因是什么）
-```
-
----
 
 ## 完成项清单（Submission Checklist）
 

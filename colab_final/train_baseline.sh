@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# train_baseline.sh - 在 ModelNet40 上运行 PointNet 训练（主线）
-# 可从仓库根目录运行：bash colab_final/train_baseline.sh
-# 也可进入文件夹后运行：bash train_baseline.sh
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,8 +14,18 @@ if [ ! -d "${DATASET_PATH}" ]; then
   exit 1
 fi
 
-echo "==> 开始训练 PointNet 分类模型..."
+OUTPUT_DIR="cls"
+CSV_PATH="${OUTPUT_DIR}/metrics.csv"
+
+echo "==> 开始训练 PointNet baseline..."
 python "${SCRIPT_DIR}/train_classification_h5.py" \
   --dataset "${DATASET_PATH}" \
   --nepoch=20 \
-  --dataset_type modelnet40
+  --dataset_type modelnet40 \
+  --outf "${OUTPUT_DIR}" \
+  --log_csv "${CSV_PATH}"
+
+echo ""
+echo "==> baseline 训练完成。输出文件："
+echo "    模型权重: ${OUTPUT_DIR}/cls_model_*.pth"
+echo "    每轮指标: ${CSV_PATH}"

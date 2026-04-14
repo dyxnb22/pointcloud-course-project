@@ -12,9 +12,11 @@
 #   4. Per-epoch CSV logging (--log_csv): writes epoch, train_loss, train_acc,
 #      test_acc to cls_advanced/metrics.csv for easy final reporting.
 #
-# Run from the repository root (same directory as pointnet.pytorch/):
-#   bash colab_final/train_advanced.sh
+# 可从仓库根目录运行：bash colab_final/train_advanced.sh
+# 也可进入文件夹后运行：bash train_advanced.sh
 set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ ! -d "pointnet.pytorch" ]; then
   echo "错误：找不到 pointnet.pytorch，请先运行: bash colab_final/colab_setup.sh"
@@ -31,7 +33,7 @@ OUTPUT_DIR="cls_advanced"
 CSV_PATH="${OUTPUT_DIR}/metrics.csv"
 
 echo "==> [2.2] 开始训练 PointNet 高级扩展实验（label smoothing + scale augment + feature transform）..."
-python colab_final/train_classification_h5.py \
+python "${SCRIPT_DIR}/train_classification_h5.py" \
   --dataset "${DATASET_PATH}" \
   --nepoch=20 \
   --dataset_type modelnet40 \

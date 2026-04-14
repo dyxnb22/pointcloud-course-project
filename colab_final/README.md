@@ -15,6 +15,10 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 
 ## 建议使用顺序（Colab）
 
+> 两种调用方式均支持：
+> - 从仓库根目录运行：`bash colab_final/<脚本名>.sh`
+> - 将本文件夹上传到 Colab 后进入目录运行：`bash <脚本名>.sh`
+
 1. 上传或克隆本仓库到 Colab 运行目录
 2. 执行环境准备：
 
@@ -28,13 +32,13 @@ bash colab_final/colab_setup.sh
 bash colab_final/train_baseline.sh
 ```
 
-4. 执行跨数据集训练（ModelNet10 子集，可选）：
+4. 执行跨数据集训练（ModelNet10 子集）：
 
 ```bash
 bash colab_final/train_cross_dataset.sh
 ```
 
-5. 执行 DGCNN 对比实验（可选）：
+5. 执行 DGCNN 对比实验：
 
 ```bash
 bash colab_final/train_dgcnn.sh
@@ -46,11 +50,83 @@ bash colab_final/train_dgcnn.sh
 bash colab_final/train_advanced.sh
 ```
 
-## 备注
+---
 
-- 该目录是 Colab 运行入口的集中版本，便于课程提交时统一整理。
-- `colab_setup.sh` 内置 ModelNet40 多镜像回退，并会基于 ModelNet40 自动构建 `modelnet10_ply_hdf5_2048`，无需额外下载第二数据集。
-- 训练输出（如 `loss.txt`、`accuracy.txt`、`best_model.pth`）请在 Colab 中及时下载保存。
+## 训练输出文件位置（Output File Locations）
+
+运行各脚本后，产出文件均位于 **Colab 工作目录**（即运行 `bash` 命令所在目录）的以下路径：
+
+| 脚本 | 产出文件路径 | 说明 |
+|------|-------------|------|
+| `train_baseline.sh` | `cls/cls_model_<epoch>.pth` | PointNet Baseline 每轮模型权重 |
+| `train_cross_dataset.sh` | `cls/cls_model_<epoch>.pth` | 跨数据集（ModelNet10）每轮模型权重（与 baseline 同目录） |
+| `train_dgcnn.sh` | `dgcnn/pytorch/checkpoints/dgcnn_test/models/model.t7` | DGCNN 最佳模型权重 |
+| `train_dgcnn.sh` | `dgcnn/pytorch/checkpoints/dgcnn_test/run.log` | DGCNN 训练日志 |
+| `train_advanced.sh` | `cls_advanced/cls_model_<epoch>.pth` | Advanced 每轮模型权重 |
+| `train_advanced.sh` | `cls_advanced/metrics.csv` | 每轮 `epoch,train_loss,train_acc,test_acc` 指标 |
+
+> **提示**：Colab 重启后文件会丢失，请及时通过 `files.download()` 或 Google Drive 保存以上文件。
+
+---
+
+## 需要填写的内容（Fill-in Template）
+
+运行完成后，请将以下数值/内容补充到报告或本 README 的 Results 章节：
+
+```
+## Results（实验结果）
+
+### 精度汇总
+
+| 方法 | 数据集 | 最终测试精度 | 论文报告精度 | 差距分析 |
+|------|--------|-------------|-------------|---------|
+| PointNet Baseline | ModelNet40 | __.__% | 89.2% | （填：偏高/偏低，原因） |
+| PointNet Baseline | ModelNet10 (cross-dataset) | __.__% | — | （填：泛化表现说明） |
+| DGCNN | ModelNet40 | __.__% | 92.9% | （填：偏高/偏低，原因） |
+| PointNet Advanced (2.2) | ModelNet40 | __.__% | — | （填：与 baseline 对比） |
+
+### 训练曲线对比（Baseline vs Advanced）
+
+（在此粘贴或描述 loss/accuracy 曲线对比结果，或说明 metrics.csv 中的关键数字）
+
+### 论文结果对比分析
+
+（填：你的结果与论文数值的差距，以及可能原因，如 epoch 数、数据增强、硬件差异等）
+
+### 失败案例与方法局限性分析
+
+（填：至少列出 2–3 类容易分类错误的点云类别，分析原因；
+ 说明 PointNet 的主要局限，如局部结构捕捉不足、尺度敏感等；
+ 提出可能的改进方向）
+
+### Advanced 2.2 改进效果分析
+
+（填：label smoothing + scale augment + feature transform 带来了多少精度提升？
+ 分析每项改动的贡献，是否符合预期，原因是什么）
+```
+
+---
+
+## 完成项清单（Submission Checklist）
+
+### 2.1 基础要求（Basic Requirements）
+
+- [ ] **1. 项目介绍**：任务定义（3D点云分类）、输入输出（点云→类别）、数据集（ModelNet40/10）、参考论文（PointNet）、目标动机、技术挑战已在 README/报告中说明
+- [ ] **2. 环境部署**：`colab_setup.sh` 可一键运行，README 中有逐步执行说明（pip install / conda 等）
+- [ ] **3. Demo 可运行**：`train_baseline.sh` 能跑通并输出 loss/accuracy；README 中每步命令有说明
+- [ ] **4. 模型训练**：已完成 baseline 训练（ModelNet40），`cls/cls_model_*.pth` 文件已产出并保存
+- [ ] **5. 与论文对比**：已记录最终测试精度，与论文结果（89.2%）进行了数值对比，并分析误差原因；有训练曲线或日志截图
+- [ ] **6. 其他数据集验证**：已运行 `train_cross_dataset.sh`（ModelNet10），记录了跨数据集精度，说明泛化结论
+- [ ] **7. 缺点分析与改进**：已分析 PointNet 的局限性（如局部结构、尺度等），列出失败案例并给出改进思路
+- [ ] **8. 实现并对比 SOTA 方法**：已运行 `train_dgcnn.sh`（DGCNN），并与 PointNet baseline 进行了精度对比，分析了方法差异
+
+### 2.2 高级要求（Advanced Requirements）
+
+- [ ] **方法扩展实现**：已运行 `train_advanced.sh`，启用了 label smoothing + scale augment + feature transform
+- [ ] **CSV 指标记录**：`cls_advanced/metrics.csv` 已产出，包含完整的每轮 `epoch,train_loss,train_acc,test_acc`
+- [ ] **改进动机说明**：已在报告/README 中说明每项改动的动机（为什么这样改、解决什么问题）
+- [ ] **结果对比与分析**：已将 Advanced 精度与 Baseline 精度对比，分析改进效果；若精度未提升也要给出分析
+- [ ] **证据文件齐全**：`cls_advanced/metrics.csv` 和最终模型权重已下载保存，作为提交证据
 
 ---
 
@@ -80,11 +156,14 @@ PointNet 基线在 ModelNet40 上的分类精度受两方面限制：
 ### 如何运行（How to Run）
 
 ```bash
-# 1. 确保环境已准备好
+# 1. 确保环境已准备好（从仓库根目录运行）
 bash colab_final/colab_setup.sh
 
-# 2. 一键启动高级实验
+# 2. 一键启动高级实验（从仓库根目录运行）
 bash colab_final/train_advanced.sh
+
+# 或：进入 colab_final 文件夹后直接运行
+# bash train_advanced.sh
 ```
 
 等价的完整命令（手动调参参考）：
@@ -117,10 +196,10 @@ epoch,train_loss,train_acc,test_acc
 ...
 ```
 
-### 结果汇报清单（Reporting Checklist）
+---
 
-- [ ] 记录 baseline（`train_baseline.sh`）最终测试精度（`final accuracy`）
-- [ ] 记录高级实验（`train_advanced.sh`）最终测试精度
-- [ ] 对比两组 `metrics.csv`（或训练日志），绘制或描述 loss/accuracy 曲线差异
-- [ ] 说明 label smoothing + scale augment 是否带来精度提升，分析原因
-- [ ] 下载并保存 `cls_advanced/metrics.csv` 和最终模型权重作为提交证据
+## 备注
+
+- 该目录是 Colab 运行入口的集中版本，便于课程提交时统一整理。
+- `colab_setup.sh` 内置 ModelNet40 多镜像回退，并会基于 ModelNet40 自动构建 `modelnet10_ply_hdf5_2048`，无需额外下载第二数据集。
+- 训练输出（如 `cls_advanced/metrics.csv`、`cls_model_*.pth`）请在 Colab 中及时下载保存。

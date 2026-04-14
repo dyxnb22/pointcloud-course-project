@@ -161,6 +161,8 @@ def detect_list_line(split_name: str, default_filename: str) -> str:
             if "/" not in line:
                 return default_filename
             prefix = line.rsplit("/", 1)[0]
+            if "modelnet40_ply_hdf5_2048" not in prefix:
+                return default_filename
             prefix = prefix.replace("modelnet40_ply_hdf5_2048", "modelnet10_ply_hdf5_2048")
             return f"{prefix}/{default_filename}"
     return default_filename

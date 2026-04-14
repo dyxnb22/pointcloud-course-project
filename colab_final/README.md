@@ -34,5 +34,5 @@ bash colab_final/train_dgcnn.sh
 ## 备注
 
 - 该目录是 Colab 运行入口的集中版本，便于课程提交时统一整理。
-- `colab_setup.sh` 内置多镜像回退，减少 ModelNet40/ShapeNet 下载卡死问题；访问私有 Hugging Face 资源时可设置 `HF_TOKEN` 或 `HUGGINGFACE_TOKEN`。若 ShapeNet 镜像全部失效，可手动上传 `shapenetcore_partanno_segmentation_benchmark_v0.zip` 到当前目录或 `/content`，或设置 `SHAPENET_ZIP_PATH` 指向该压缩包后重试。
+- `colab_setup.sh` 内置多镜像回退，减少 ModelNet40/ShapeNet 下载卡死问题；若 ShapeNet 镜像全部失效，可手动上传 `shapenetcore_partanno_segmentation_benchmark_v0.zip` 到当前目录或 `/content`，或设置 `SHAPENET_ZIP_PATH` 指向该压缩包后重试（也可通过 `SHAPENET_URLS` 自定义镜像列表）。
 - 训练输出（如 `loss.txt`、`accuracy.txt`、`best_model.pth`）请在 Colab 中及时下载保存。

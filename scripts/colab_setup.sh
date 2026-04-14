@@ -24,8 +24,8 @@ else
   mirrors=(
     "https://huggingface.co/datasets/Msun/modelnet40/resolve/main/modelnet40_ply_hdf5_2048.zip"
     "https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip"
-    "https://github.com/charlesq34/pointnet/raw/master/data/modelnet40_ply_hdf5_2048.zip"
-    "https://github.com/yanx27/Pointnet_Pointnet2_pytorch/raw/master/data/modelnet40_ply_hdf5_2048.zip"
+    "https://raw.githubusercontent.com/charlesq34/pointnet/2618f72bc1a0fd21b074096e748016960d44ef55/data/modelnet40_ply_hdf5_2048.zip"
+    "https://raw.githubusercontent.com/yanx27/Pointnet_Pointnet2_pytorch/eb64fe0b4c24055559cea26299cb485dcb43d8dd/data/modelnet40_ply_hdf5_2048.zip"
   )
 
   downloaded=0
@@ -120,7 +120,7 @@ download_zip_path = os.path.join(data_dir, f".{zip_name}.download")
 
 default_mirror_urls = [
     "https://shapenet.cs.stanford.edu/media/shapenetcore_partanno_segmentation_benchmark_v0.zip",
-    "https://github.com/charlesq34/pointnet/raw/master/shapenetcore_partanno_segmentation_benchmark_v0.zip",
+    "https://raw.githubusercontent.com/charlesq34/pointnet/2618f72bc1a0fd21b074096e748016960d44ef55/shapenetcore_partanno_segmentation_benchmark_v0.zip",
 ]
 if mirror_urls_env:
     mirror_urls = [u.strip() for u in mirror_urls_env.split(",") if u.strip()]
@@ -165,9 +165,13 @@ def download_file(url, dst):
     try:
         with urllib.request.urlopen(url, timeout=connect_timeout) as response:
             content_type = response.headers.get("Content-Type", "").lower()
-            if content_type and not any(
-                allowed in content_type for allowed in ("zip", "octet-stream", "binary")
-            ):
+            normalized_content_type = content_type.split(";", 1)[0].strip()
+            allowed_content_types = {
+                "application/zip",
+                "application/x-zip-compressed",
+                "application/octet-stream",
+            }
+            if normalized_content_type and normalized_content_type not in allowed_content_types:
                 raise RuntimeError(
                     f"Unexpected content type for {url}: {response.headers.get('Content-Type', '')}"
                 )

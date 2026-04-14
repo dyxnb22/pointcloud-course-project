@@ -121,23 +121,23 @@ mirrors = [
     "jason233/ShapeNetCore_partanno_segmentation_benchmark_v0",
 ]
 
-def reset_temp_dir():
-    shutil.rmtree(temp_dir, ignore_errors=True)
-    os.makedirs(temp_dir, exist_ok=True)
+def reset_temp_dir(work_dir):
+    shutil.rmtree(work_dir, ignore_errors=True)
+    os.makedirs(work_dir, exist_ok=True)
 
-def extract_and_organize(zip_path, source_name):
+def extract_and_organize(zip_path, source_name, work_dir, output_dir):
     print(f"Using ShapeNet archive from {source_name}: {zip_path}")
-    reset_temp_dir()
+    reset_temp_dir(work_dir)
     with zipfile.ZipFile(zip_path, "r") as zf:
-        zf.extractall(temp_dir)
+        zf.extractall(work_dir)
 
-    os.makedirs(target_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
     moved = False
-    for root, _, files in os.walk(temp_dir):
+    for root, _, files in os.walk(work_dir):
         if "synsetoffset2category.txt" in files:
             for item in os.listdir(root):
                 src = os.path.join(root, item)
-                dst = os.path.join(target_dir, item)
+                dst = os.path.join(output_dir, item)
                 if os.path.isdir(src):
                     shutil.copytree(src, dst, dirs_exist_ok=True)
                 else:
@@ -146,9 +146,9 @@ def extract_and_organize(zip_path, source_name):
             break
 
     if not moved:
-        for item in os.listdir(temp_dir):
-            src = os.path.join(temp_dir, item)
-            dst = os.path.join(target_dir, item)
+        for item in os.listdir(work_dir):
+            src = os.path.join(work_dir, item)
+            dst = os.path.join(output_dir, item)
             if os.path.isdir(src):
                 shutil.copytree(src, dst, dirs_exist_ok=True)
             else:
@@ -175,7 +175,7 @@ try:
         if not os.path.isfile(local_zip):
             continue
         try:
-            extract_and_organize(local_zip, "local file")
+            extract_and_organize(local_zip, local_zip, temp_dir, target_dir)
             success = True
             break
         except Exception as e:
@@ -193,7 +193,7 @@ try:
                 if token:
                     kwargs["token"] = token
                 zip_path = hf_hub_download(**kwargs)
-                extract_and_organize(zip_path, f"mirror {repo}")
+                extract_and_organize(zip_path, f"mirror {repo}", temp_dir, target_dir)
                 success = True
                 break
             except Exception as e:

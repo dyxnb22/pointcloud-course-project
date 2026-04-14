@@ -171,8 +171,7 @@ def download_file(url, dst):
     try:
         with urllib.request.urlopen(url, timeout=connect_timeout) as response:
             content_type_header = response.headers.get("Content-Type", "")
-            content_type_lower = content_type_header.lower()
-            normalized_content_type = content_type_lower.split(";", 1)[0].strip()
+            normalized_content_type = content_type_header.lower().split(";", 1)[0].strip()
             if not normalized_content_type:
                 print(f"[warning] Missing Content-Type for {url}; continuing with archive extraction validation.")
             elif normalized_content_type not in ALLOWED_CONTENT_TYPES:

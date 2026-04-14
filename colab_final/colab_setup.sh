@@ -161,9 +161,15 @@ def detect_list_line(split_name: str, default_filename: str) -> str:
             if "/" not in line:
                 return default_filename
             prefix = line.rsplit("/", 1)[0]
-            if "modelnet40_ply_hdf5_2048" not in prefix:
+            prefix_parts = prefix.split("/")
+            replaced = False
+            for idx, part in enumerate(prefix_parts):
+                if part == "modelnet40_ply_hdf5_2048":
+                    prefix_parts[idx] = "modelnet10_ply_hdf5_2048"
+                    replaced = True
+            if not replaced:
                 return default_filename
-            prefix = prefix.replace("modelnet40_ply_hdf5_2048", "modelnet10_ply_hdf5_2048")
+            prefix = "/".join(prefix_parts)
             return f"{prefix}/{default_filename}"
     return default_filename
 
@@ -207,7 +213,7 @@ train_h5 = build_split("train")
 test_h5 = build_split("test")
 
 with open(os.path.join(target_dir, "shape_names.txt"), "w", encoding="utf-8") as f:
-    f.write("\n".join(selected_classes) + "\n")
+    f.write("\n".join(selected_classes))
 
 train_list_line = detect_list_line("train", train_h5)
 test_list_line = detect_list_line("test", test_h5)

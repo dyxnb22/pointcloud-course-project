@@ -78,7 +78,7 @@ bash scripts/colab_setup.sh
 bash scripts/colab_setup.sh
 ```
 
-> `colab_setup.sh` 已内置多镜像下载与超时自动回退机制，避免单一源站卡住。
+> `colab_setup.sh` 已内置 ModelNet40/ShapeNet 多镜像下载与自动回退机制；如需访问私有 Hugging Face 资源，可提前设置 `HF_TOKEN`（或 `HUGGINGFACE_TOKEN`）环境变量。
 
 ### 2.2 训练命令
 

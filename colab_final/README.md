@@ -7,7 +7,8 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 ## 文件说明
 
 - `colab_setup.sh`: 一键克隆依赖仓库并安装环境，同时用多镜像回退准备 ModelNet40 + ShapeNet 数据集（支持 `HF_TOKEN` / `HUGGINGFACE_TOKEN`）
-- `train_baseline.sh`: 运行 PointNet Baseline 训练
+- `train_baseline.sh`: 运行 PointNet Baseline 训练（ModelNet40 主线）
+- `train_cross_dataset.sh`: 运行 PointNet 跨数据集训练（ShapeNet）
 - `train_dgcnn.sh`: 运行 DGCNN 对比实验训练
 
 ## 建议使用顺序（Colab）
@@ -19,13 +20,19 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 bash colab_final/colab_setup.sh
 ```
 
-3. 执行 Baseline 训练：
+3. 执行 Baseline 训练（ModelNet40）：
 
 ```bash
 bash colab_final/train_baseline.sh
 ```
 
-4. 执行 DGCNN 对比实验（可选）：
+4. 执行跨数据集训练（ShapeNet，可选）：
+
+```bash
+bash colab_final/train_cross_dataset.sh
+```
+
+5. 执行 DGCNN 对比实验（可选）：
 
 ```bash
 bash colab_final/train_dgcnn.sh

@@ -19,6 +19,7 @@ pointcloud-course-project/
 ├── scripts/            # 一键运行脚本
 │   ├── colab_setup.sh
 │   ├── train_baseline.sh
+│   ├── train_cross_dataset.sh
 │   └── train_dgcnn.sh
 ├── experiments/        # 各阶段实验记录
 │   ├── baseline/
@@ -41,6 +42,7 @@ pointcloud-course-project/
 - `colab_final/README.md`
 - `colab_final/colab_setup.sh`
 - `colab_final/train_baseline.sh`
+- `colab_final/train_cross_dataset.sh`
 - `colab_final/train_dgcnn.sh`
 
 ---
@@ -70,7 +72,7 @@ bash scripts/colab_setup.sh
 
 ---
 
-## 2. Baseline 训练（PointNet）
+## 2. Baseline 训练（PointNet，ModelNet40 主线）
 
 ### 2.1 下载数据集
 
@@ -84,7 +86,7 @@ bash scripts/colab_setup.sh
 
 ```bash
 !python pointnet.pytorch/utils/train_classification.py \
-  --dataset pointnet.pytorch/shapenetcore_partanno_segmentation_benchmark_v0 \
+  --dataset pointnet.pytorch/data/modelnet40_ply_hdf5_2048 \
   --nepoch=20 \
   --dataset_type modelnet40
 ```
@@ -99,13 +101,19 @@ bash scripts/train_baseline.sh
 
 ---
 
-## 3. 鲁棒性测试（基础要求 6 & 7）
+## 3. 跨数据集与鲁棒性测试（基础要求 6 & 7）
 
 PointNet 典型缺点：**局部特征提取能力弱、对噪声敏感**。
 
 测试方法：
 1. 在测试集数据加载函数中加入高斯抖动（Gaussian Jitter）
-2. 或使用 `ScanObjectNN`（真实扫描，含背景干扰）进行跨数据集测试，记录准确率变化作为"缺点分析"依据
+2. 使用第二分类数据集进行跨数据集测试（本仓库提供 ShapeNet 最小路径），记录准确率变化作为“缺点分析”依据
+
+跨数据集训练命令（ShapeNet）：
+
+```bash
+bash scripts/train_cross_dataset.sh
+```
 
 ---
 

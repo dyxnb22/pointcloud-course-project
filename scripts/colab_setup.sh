@@ -167,21 +167,25 @@ def download_file(url, dst):
             status = getattr(response, "status", 200)
             if status and int(status) >= 400:
                 raise RuntimeError(f"HTTP {status} while downloading {url}")
-            content_type = (response.headers.get("Content-Type", "") or "").lower()
+            content_type = response.headers.get("Content-Type", "").lower()
             if content_type and not any(
                 allowed in content_type for allowed in ("zip", "octet-stream", "binary")
             ):
                 raise RuntimeError(
                     f"Unexpected content type for {url}: {response.headers.get('Content-Type', '')}"
                 )
+            timeout_reached = False
             with open(dst, "wb") as f:
                 while True:
                     if time.monotonic() - start_time >= total_timeout:
-                        raise TimeoutError(f"total download timeout exceeded: {total_timeout}s")
+                        timeout_reached = True
+                        break
                     chunk = response.read(1024 * 1024)
                     if not chunk:
                         break
                     f.write(chunk)
+            if timeout_reached:
+                raise TimeoutError(f"total download timeout exceeded: {total_timeout}s")
     except urllib.error.HTTPError as e:
         try:
             if os.path.exists(dst):

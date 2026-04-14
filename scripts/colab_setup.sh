@@ -166,6 +166,13 @@ def extract_and_organize(zip_path, source_name, work_dir, output_dir):
             else:
                 shutil.copy2(src, dst)
 
+def safe_remove(path):
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+    except OSError:
+        pass
+
 def download_file(url, dst):
     start_time = time.monotonic()
     try:
@@ -179,35 +186,31 @@ def download_file(url, dst):
                     f"Unexpected content type for {url}: {content_type_header}"
                 )
             timeout_reached = False
+            check_timeout_every_chunks = 8
+            chunk_counter = 0
             with open(dst, "wb") as f:
                 while True:
-                    if time.monotonic() - start_time >= total_timeout:
-                        timeout_reached = True
-                        break
                     chunk = response.read(1024 * 1024)
                     if not chunk:
                         break
                     f.write(chunk)
+                    chunk_counter += 1
+                    if (
+                        chunk_counter >= check_timeout_every_chunks
+                        and time.monotonic() - start_time >= total_timeout
+                    ):
+                        timeout_reached = True
+                        break
+                    if chunk_counter >= check_timeout_every_chunks:
+                        chunk_counter = 0
             if timeout_reached:
-                try:
-                    if os.path.exists(dst):
-                        os.remove(dst)
-                except OSError:
-                    pass
+                safe_remove(dst)
                 raise TimeoutError(f"total download timeout exceeded: {total_timeout}s")
     except urllib.error.HTTPError as e:
-        try:
-            if os.path.exists(dst):
-                os.remove(dst)
-        except OSError:
-            pass
+        safe_remove(dst)
         raise RuntimeError(f"HTTP {e.code} while downloading {url}") from e
     except Exception:
-        try:
-            if os.path.exists(dst):
-                os.remove(dst)
-        except OSError:
-            pass
+        safe_remove(dst)
         raise
 
 success = False

@@ -58,8 +58,10 @@ class ModelNetH5Dataset(torch.utils.data.Dataset):
                 break
 
         if not entries:
-            pattern = "ply_data_train*.h5" if split == "trainval" else "ply_data_test*.h5"
-            entries = sorted([name for name in os.listdir(self.root) if name.startswith(pattern[:-4]) and name.endswith(".h5")])
+            prefix = "ply_data_train" if split == "trainval" else "ply_data_test"
+            entries = sorted(
+                [name for name in os.listdir(self.root) if name.startswith(prefix) and name.endswith(".h5")]
+            )
 
         paths = []
         for entry in entries:
@@ -100,7 +102,13 @@ class ModelNetH5Dataset(torch.utils.data.Dataset):
         points = self.data[index]
         target = self.label[index]
 
-        choice = np.random.choice(points.shape[0], self.npoints, replace=True)
+        if self.data_augmentation:
+            choice = np.random.choice(points.shape[0], self.npoints, replace=True)
+        elif points.shape[0] >= self.npoints:
+            choice = np.arange(self.npoints)
+        else:
+            repeats = int(np.ceil(self.npoints / points.shape[0]))
+            choice = np.tile(np.arange(points.shape[0]), repeats)[: self.npoints]
         points = points[choice, :]
         points = self._normalize(points)
 
@@ -154,7 +162,7 @@ def main():
         dataset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers)
     )
     testdataloader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers)
+        test_dataset, batch_size=opt.batchSize, shuffle=False, num_workers=int(opt.workers)
     )
 
     print(len(dataset), len(test_dataset))

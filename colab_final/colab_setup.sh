@@ -103,6 +103,7 @@ import os
 import shutil
 import sys
 import time
+import urllib.error
 import urllib.request
 import zipfile
 
@@ -167,6 +168,13 @@ def download_file(url, dst):
                 if not chunk:
                     break
                 f.write(chunk)
+    except urllib.error.HTTPError as e:
+        try:
+            if os.path.exists(dst):
+                os.remove(dst)
+        except OSError:
+            pass
+        raise RuntimeError(f"HTTP {e.code} while downloading {url}") from e
     except Exception:
         try:
             if os.path.exists(dst):
@@ -215,7 +223,10 @@ try:
 finally:
     shutil.rmtree(temp_dir, ignore_errors=True)
     if os.path.exists(download_zip_path):
-        os.remove(download_zip_path)
+        try:
+            os.remove(download_zip_path)
+        except OSError as e:
+            print(f"[cleanup-warning] failed to remove download file: {e}", file=sys.stderr)
 
 if not success:
     print(

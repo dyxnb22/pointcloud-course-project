@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import argparse
+import csv
 import os
 import random
 
@@ -14,12 +15,41 @@ from pointnet.model import PointNetCls, feature_transform_regularizer
 from tqdm import tqdm
 
 
+def label_smoothing_loss(log_prob, target, num_classes, smoothing=0.0):
+    """NLL loss with optional label smoothing.
+
+    When *smoothing* is 0 the function is identical to ``F.nll_loss``, so the
+    baseline behaviour is preserved exactly.  For smoothing > 0 the one-hot
+    target is softened: the correct class gets probability
+    ``1 - smoothing`` and the remaining mass is spread uniformly over all
+    other classes.
+
+    Args:
+        log_prob: Log-probabilities from the model, shape (N, C).
+        target: Ground-truth class indices, shape (N,).
+        num_classes: Total number of classes C.
+        smoothing: Label-smoothing coefficient in [0, 1).
+
+    Returns:
+        Scalar loss tensor.
+    """
+    if smoothing == 0.0 or num_classes <= 1:
+        return F.nll_loss(log_prob, target)
+    confidence = 1.0 - smoothing
+    smooth_val = smoothing / max(1, num_classes - 1)
+    with torch.no_grad():
+        smooth_dist = torch.full_like(log_prob, smooth_val)
+        smooth_dist.scatter_(1, target.unsqueeze(1), confidence)
+    return -(smooth_dist * log_prob).sum(dim=1).mean()
+
+
 class ModelNetH5Dataset(torch.utils.data.Dataset):
-    def __init__(self, root, npoints=2500, split="trainval", data_augmentation=True):
+    def __init__(self, root, npoints=2500, split="trainval", data_augmentation=True, scale_augment=False):
         self.root = root
         self.npoints = npoints
         self.split = split
         self.data_augmentation = data_augmentation
+        self.scale_augment = scale_augment
 
         file_list = self._resolve_h5_list(split)
         data_chunks = []
@@ -118,6 +148,9 @@ class ModelNetH5Dataset(torch.utils.data.Dataset):
             )
             points[:, [0, 2]] = points[:, [0, 2]].dot(rotation_matrix)
             points += np.random.normal(0, 0.02, size=points.shape)
+            if self.scale_augment:
+                scale = np.random.uniform(0.8, 1.25)
+                points *= scale
 
         return torch.from_numpy(points.astype(np.float32)), torch.tensor(target, dtype=torch.long)
 
@@ -136,6 +169,19 @@ def main():
     parser.add_argument("--dataset", type=str, required=True, help="dataset path")
     parser.add_argument("--dataset_type", type=str, default="modelnet40", help="dataset type")
     parser.add_argument("--feature_transform", action="store_true", help="use feature transform")
+    # --- Advanced 2.2 extensions (all optional; defaults preserve baseline behaviour) ---
+    parser.add_argument(
+        "--label_smoothing", type=float, default=0.0,
+        help="label smoothing factor for cross-entropy loss (0=disabled, e.g. 0.1)",
+    )
+    parser.add_argument(
+        "--scale_augment", action="store_true", default=False,
+        help="apply random scale augmentation [0.8, 1.25] during training",
+    )
+    parser.add_argument(
+        "--log_csv", type=str, default="",
+        help="if set, write per-epoch train/test metrics to this CSV file",
+    )
 
     opt = parser.parse_args()
     print(opt)
@@ -149,7 +195,10 @@ def main():
     np.random.seed(opt.manualSeed)
     torch.manual_seed(opt.manualSeed)
 
-    dataset = ModelNetH5Dataset(root=opt.dataset, npoints=opt.num_points, split="trainval")
+    dataset = ModelNetH5Dataset(
+        root=opt.dataset, npoints=opt.num_points, split="trainval",
+        scale_augment=opt.scale_augment,
+    )
     test_dataset = ModelNetH5Dataset(
         root=opt.dataset,
         split="test",
@@ -180,7 +229,19 @@ def main():
     num_batch = max(1, len(dataset) // opt.batchSize)
     blue = lambda x: "\033[94m" + x + "\033[0m"
 
+    # --- CSV metric logger (Advanced 2.2) ---
+    csv_fh = None
+    csv_writer = None
+    if opt.log_csv:
+        os.makedirs(os.path.dirname(opt.log_csv) or ".", exist_ok=True)
+        csv_fh = open(opt.log_csv, "w", newline="", encoding="utf-8")
+        csv_writer = csv.writer(csv_fh)
+        csv_writer.writerow(["epoch", "train_loss", "train_acc", "test_acc"])
+
     for epoch in range(opt.nepoch):
+        epoch_loss_sum = 0.0
+        epoch_correct = 0
+        epoch_total = 0
         test_iter = iter(testdataloader)
         for i, data in enumerate(dataloader, 0):
             points, target = data
@@ -190,13 +251,16 @@ def main():
             optimizer.zero_grad()
             classifier = classifier.train()
             pred, trans, trans_feat = classifier(points)
-            loss = F.nll_loss(pred, target)
+            loss = label_smoothing_loss(pred, target, num_classes, smoothing=opt.label_smoothing)
             if opt.feature_transform:
                 loss += feature_transform_regularizer(trans_feat) * 0.001
             loss.backward()
             optimizer.step()
             pred_choice = pred.data.max(1)[1]
             correct = pred_choice.eq(target.data).sum().item()
+            epoch_loss_sum += loss.item()
+            epoch_correct += correct
+            epoch_total += points.size(0)
             print(
                 "[%d: %d/%d] train loss: %f accuracy: %f"
                 % (epoch, i, num_batch, loss.item(), correct / float(points.size(0)))
@@ -229,6 +293,34 @@ def main():
 
         torch.save(classifier.state_dict(), "%s/cls_model_%d.pth" % (opt.outf, epoch))
         scheduler.step()
+
+        # Per-epoch full evaluation for CSV logging (Advanced 2.2)
+        if csv_writer is not None:
+            classifier.eval()
+            ep_test_correct = 0
+            ep_test_total = 0
+            with torch.no_grad():
+                for data in testdataloader:
+                    pts, tgt = data
+                    pts = pts.transpose(2, 1).to(device)
+                    tgt = tgt.to(device)
+                    p, _, _ = classifier(pts)
+                    ep_test_correct += p.data.max(1)[1].eq(tgt.data).sum().item()
+                    ep_test_total += pts.size(0)
+            train_loss_avg = epoch_loss_sum / num_batch
+            train_acc = epoch_correct / max(1, epoch_total)
+            test_acc = ep_test_correct / max(1, ep_test_total)
+            csv_writer.writerow(
+                [epoch, f"{train_loss_avg:.4f}", f"{train_acc:.4f}", f"{test_acc:.4f}"]
+            )
+            csv_fh.flush()
+            print(
+                "Epoch %d summary — train_loss: %.4f  train_acc: %.4f  test_acc: %.4f"
+                % (epoch, train_loss_avg, train_acc, test_acc)
+            )
+
+    if csv_fh is not None:
+        csv_fh.close()
 
     total_correct = 0
     total_testset = 0

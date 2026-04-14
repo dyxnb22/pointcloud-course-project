@@ -7,6 +7,7 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 ## 文件说明
 
 - `colab_setup.sh`: 一键克隆依赖仓库并安装环境，同时用多镜像回退准备 ModelNet40，并自动构建 ModelNet10 子集作为第二数据集
+- `train_classification_h5.py`: PointNet 分类训练入口（兼容 `modelnet40_ply_hdf5_2048`）
 - `train_baseline.sh`: 运行 PointNet Baseline 训练（ModelNet40 主线）
 - `train_cross_dataset.sh`: 运行 PointNet 跨数据集训练（ModelNet10 子集）
 - `train_dgcnn.sh`: 运行 DGCNN 对比实验训练

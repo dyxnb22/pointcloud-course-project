@@ -195,13 +195,10 @@ def download_file(url, dst):
                         break
                     f.write(chunk)
                     chunk_counter += 1
-                    if (
-                        chunk_counter >= check_timeout_every_chunks
-                        and time.monotonic() - start_time >= total_timeout
-                    ):
-                        timeout_reached = True
-                        break
                     if chunk_counter >= check_timeout_every_chunks:
+                        if time.monotonic() - start_time >= total_timeout:
+                            timeout_reached = True
+                            break
                         chunk_counter = 0
             if timeout_reached:
                 safe_remove(dst)

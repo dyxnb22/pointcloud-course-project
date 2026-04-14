@@ -122,7 +122,10 @@ default_mirror_urls = [
     "https://shapenet.cs.stanford.edu/media/shapenetcore_partanno_segmentation_benchmark_v0.zip",
     "https://github.com/charlesq34/pointnet/raw/master/shapenetcore_partanno_segmentation_benchmark_v0.zip",
 ]
-mirror_urls = [u.strip() for u in mirror_urls_env.split(",") if u.strip()] if mirror_urls_env else default_mirror_urls
+if mirror_urls_env:
+    mirror_urls = [u.strip() for u in mirror_urls_env.split(",") if u.strip()]
+else:
+    mirror_urls = default_mirror_urls
 
 def reset_temp_dir(work_dir):
     shutil.rmtree(work_dir, ignore_errors=True)
@@ -160,14 +163,25 @@ def extract_and_organize(zip_path, source_name, work_dir, output_dir):
 def download_file(url, dst):
     start_time = time.monotonic()
     try:
-        with urllib.request.urlopen(url, timeout=connect_timeout) as response, open(dst, "wb") as f:
-            while True:
-                if time.monotonic() - start_time >= total_timeout:
-                    raise TimeoutError(f"total download timeout exceeded: {total_timeout}s")
-                chunk = response.read(1024 * 1024)
-                if not chunk:
-                    break
-                f.write(chunk)
+        with urllib.request.urlopen(url, timeout=connect_timeout) as response:
+            status = getattr(response, "status", 200)
+            if status and int(status) >= 400:
+                raise RuntimeError(f"HTTP {status} while downloading {url}")
+            content_type = (response.headers.get("Content-Type", "") or "").lower()
+            if content_type and not any(
+                allowed in content_type for allowed in ("zip", "octet-stream", "binary")
+            ):
+                raise RuntimeError(
+                    f"Unexpected content type for {url}: {response.headers.get('Content-Type', '')}"
+                )
+            with open(dst, "wb") as f:
+                while True:
+                    if time.monotonic() - start_time >= total_timeout:
+                        raise TimeoutError(f"total download timeout exceeded: {total_timeout}s")
+                    chunk = response.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    f.write(chunk)
     except urllib.error.HTTPError as e:
         try:
             if os.path.exists(dst):

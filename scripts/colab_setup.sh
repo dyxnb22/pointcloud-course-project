@@ -165,7 +165,11 @@ finally:
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 if not success:
-    print("Error: all ShapeNet mirrors failed.", file=sys.stderr)
+    print(
+        "Error: all ShapeNet mirrors failed during download/extract/organize. "
+        "If a mirror requires auth, set HF_TOKEN (or HUGGINGFACE_TOKEN) and retry.",
+        file=sys.stderr,
+    )
     sys.exit(1)
 PY
 fi

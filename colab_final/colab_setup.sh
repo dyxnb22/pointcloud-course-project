@@ -108,6 +108,8 @@ import numpy as np
 
 source_dir = sys.argv[1]
 target_dir = sys.argv[2]
+source_dataset_name = "modelnet40_ply_hdf5_2048"
+target_dataset_name = "modelnet10_ply_hdf5_2048"
 
 selected_classes = [
     "bathtub",
@@ -148,7 +150,7 @@ if os.path.exists(target_dir):
 os.makedirs(target_dir, exist_ok=True)
 
 
-def detect_list_line(split_name: str, default_filename: str) -> str:
+def resolve_list_file_entry(split_name: str, default_filename: str) -> str:
     # Reuse source list-path style when possible (e.g. data/modelnetXX/...),
     # otherwise safely fall back to the local output filename.
     candidate_list = os.path.join(source_dir, f"{split_name}_files.txt")
@@ -166,8 +168,8 @@ def detect_list_line(split_name: str, default_filename: str) -> str:
             prefix_parts = prefix.split("/")
             replaced = False
             for idx, part in enumerate(prefix_parts):
-                if part == "modelnet40_ply_hdf5_2048":
-                    prefix_parts[idx] = "modelnet10_ply_hdf5_2048"
+                if part == source_dataset_name:
+                    prefix_parts[idx] = target_dataset_name
                     replaced = True
             if not replaced:
                 return default_filename
@@ -217,8 +219,8 @@ test_h5 = build_split("test")
 with open(os.path.join(target_dir, "shape_names.txt"), "w", encoding="utf-8") as f:
     f.write("\n".join(selected_classes))
 
-train_files_list_entry = detect_list_line("train", train_h5)
-test_files_list_entry = detect_list_line("test", test_h5)
+train_files_list_entry = resolve_list_file_entry("train", train_h5)
+test_files_list_entry = resolve_list_file_entry("test", test_h5)
 for filename, list_entry in (
     ("train_files.txt", train_files_list_entry),
     ("test_files.txt", test_files_list_entry),

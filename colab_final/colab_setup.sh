@@ -97,8 +97,7 @@ SHAPENET_COMPAT_TARGET="pointnet.pytorch/shapenetcore_partanno_segmentation_benc
 if [ -d "${SHAPENET_TARGET}" ] && [ "$(ls -A "${SHAPENET_TARGET}" 2>/dev/null)" ]; then
   echo "ShapeNet already exists, skip."
 else
-  HF_TOKEN="${HF_TOKEN:-${HUGGINGFACE_TOKEN:-}}"
-  python - "${DATA_DIR}" "${SHAPENET_TARGET}" "${HF_TOKEN}" <<'PY'
+  python - "${DATA_DIR}" "${SHAPENET_TARGET}" <<'PY'
 import os
 import shutil
 import sys
@@ -107,7 +106,7 @@ from huggingface_hub import hf_hub_download
 
 data_dir = sys.argv[1]
 target_dir = sys.argv[2]
-token = sys.argv[3] if len(sys.argv) > 3 else ""
+token = os.environ.get("HF_TOKEN", os.environ.get("HUGGINGFACE_TOKEN", ""))
 temp_dir = os.path.join(data_dir, "temp_shapenet")
 os.makedirs(temp_dir, exist_ok=True)
 

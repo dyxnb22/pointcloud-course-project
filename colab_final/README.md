@@ -6,7 +6,7 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 
 ## 文件说明
 
-- `colab_setup.sh`: 一键克隆依赖仓库并安装环境，同时用多镜像+超时回退下载 ModelNet40 数据集
+- `colab_setup.sh`: 一键克隆依赖仓库并安装环境，同时用多镜像回退准备 ModelNet40 + ShapeNet 数据集（支持 `HF_TOKEN` / `HUGGINGFACE_TOKEN`）
 - `train_baseline.sh`: 运行 PointNet Baseline 训练
 - `train_dgcnn.sh`: 运行 DGCNN 对比实验训练
 
@@ -34,5 +34,5 @@ bash colab_final/train_dgcnn.sh
 ## 备注
 
 - 该目录是 Colab 运行入口的集中版本，便于课程提交时统一整理。
-- `colab_setup.sh` 内置多镜像下载与超时自动回退，减少数据集下载卡死问题。
+- `colab_setup.sh` 内置多镜像回退，减少 ModelNet40/ShapeNet 下载卡死问题；访问私有 Hugging Face 资源时可设置 `HF_TOKEN` 或 `HUGGINGFACE_TOKEN`。
 - 训练输出（如 `loss.txt`、`accuracy.txt`、`best_model.pth`）请在 Colab 中及时下载保存。

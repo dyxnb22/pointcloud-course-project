@@ -115,46 +115,47 @@ mirrors = [
 ]
 
 success = False
-for repo in mirrors:
-    print(f"Trying ShapeNet mirror: {repo}")
-    try:
-        kwargs = {
-            "repo_id": repo,
-            "filename": "shapenetcore_partanno_segmentation_benchmark_v0.zip",
-            "repo_type": "dataset",
-        }
-        if token:
-            kwargs["token"] = token
-        zip_path = hf_hub_download(**kwargs)
-        with zipfile.ZipFile(zip_path, "r") as zf:
-            zf.extractall(temp_dir)
+try:
+    for repo in mirrors:
+        print(f"Trying ShapeNet mirror: {repo}")
+        try:
+            kwargs = {
+                "repo_id": repo,
+                "filename": "shapenetcore_partanno_segmentation_benchmark_v0.zip",
+                "repo_type": "dataset",
+            }
+            if token:
+                kwargs["token"] = token
+            zip_path = hf_hub_download(**kwargs)
+            with zipfile.ZipFile(zip_path, "r") as zf:
+                zf.extractall(temp_dir)
 
-        os.makedirs(target_dir, exist_ok=True)
-        moved = False
-        for root, _, files in os.walk(temp_dir):
-            if "synsetoffset2category.txt" in files:
-                for item in os.listdir(root):
-                    src = os.path.join(root, item)
+            os.makedirs(target_dir, exist_ok=True)
+            moved = False
+            for root, _, files in os.walk(temp_dir):
+                if "synsetoffset2category.txt" in files:
+                    for item in os.listdir(root):
+                        src = os.path.join(root, item)
+                        dst = os.path.join(target_dir, item)
+                        if os.path.isdir(src):
+                            shutil.copytree(src, dst, dirs_exist_ok=True)
+                        else:
+                            shutil.copy2(src, dst)
+                    moved = True
+                    break
+
+            if not moved:
+                for item in os.listdir(temp_dir):
+                    src = os.path.join(temp_dir, item)
                     dst = os.path.join(target_dir, item)
                     if os.path.isdir(src):
                         shutil.copytree(src, dst, dirs_exist_ok=True)
                     else:
                         shutil.copy2(src, dst)
-                moved = True
-                break
-
-        if not moved:
-            for item in os.listdir(temp_dir):
-                src = os.path.join(temp_dir, item)
-                dst = os.path.join(target_dir, item)
-                if os.path.isdir(src):
-                    shutil.copytree(src, dst, dirs_exist_ok=True)
-                else:
-                    shutil.copy2(src, dst)
-        success = True
-        break
-    except Exception as e:
-        print(f"Mirror failed: {repo} ({e})", file=sys.stderr)
+            success = True
+            break
+        except Exception as e:
+            print(f"Mirror failed: {repo} ({e})", file=sys.stderr)
 finally:
     shutil.rmtree(temp_dir, ignore_errors=True)
 

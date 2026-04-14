@@ -80,7 +80,7 @@ bash scripts/colab_setup.sh
 bash scripts/colab_setup.sh
 ```
 
-> `colab_setup.sh` 已内置 ModelNet40/ShapeNet 多镜像下载与自动回退机制；若 ShapeNet 镜像全部失效，可手动上传 `shapenetcore_partanno_segmentation_benchmark_v0.zip` 到当前目录或 `/content`，或设置 `SHAPENET_ZIP_PATH` 指向该压缩包后重试（也可通过 `SHAPENET_URLS` 自定义镜像列表）。
+> `colab_setup.sh` 已内置 ModelNet40 多镜像下载与自动回退机制，并会基于 ModelNet40 自动构建第二数据集 `modelnet10_ply_hdf5_2048`（无需额外下载）。
 
 ### 2.2 训练命令
 
@@ -107,9 +107,9 @@ PointNet 典型缺点：**局部特征提取能力弱、对噪声敏感**。
 
 测试方法：
 1. 在测试集数据加载函数中加入高斯抖动（Gaussian Jitter）
-2. 使用第二分类数据集进行跨数据集测试（本仓库提供 ShapeNet 最小路径），记录准确率变化作为“缺点分析”依据
+2. 使用第二分类数据集进行跨数据集测试（本仓库提供基于 ModelNet40 自动构建的 ModelNet10 子集），记录准确率变化作为“缺点分析”依据
 
-跨数据集训练命令（ShapeNet）：
+跨数据集训练命令（ModelNet10 子集）：
 
 ```bash
 bash scripts/train_cross_dataset.sh

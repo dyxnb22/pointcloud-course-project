@@ -164,9 +164,6 @@ def download_file(url, dst):
     start_time = time.monotonic()
     try:
         with urllib.request.urlopen(url, timeout=connect_timeout) as response:
-            status = getattr(response, "status", 200)
-            if status and int(status) >= 400:
-                raise RuntimeError(f"HTTP {status} while downloading {url}")
             content_type = response.headers.get("Content-Type", "").lower()
             if content_type and not any(
                 allowed in content_type for allowed in ("zip", "octet-stream", "binary")
@@ -185,6 +182,11 @@ def download_file(url, dst):
                         break
                     f.write(chunk)
             if timeout_reached:
+                try:
+                    if os.path.exists(dst):
+                        os.remove(dst)
+                except OSError:
+                    pass
                 raise TimeoutError(f"total download timeout exceeded: {total_timeout}s")
     except urllib.error.HTTPError as e:
         try:

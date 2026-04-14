@@ -117,20 +117,41 @@ bash scripts/train_cross_dataset.sh
 
 ---
 
-## 4. 进阶修改（消融实验，占 20%）
+## 4. 进阶修改（Advanced Requirements 2.2，占 20%）
 
-### A. 数据增强
+### A. 架构修改：SE-Block 通道注意力
 
-在 `dataset.py` 中加入：
+在 PointNet 的全局 Max Pooling 输出（1024 维特征向量）之后插入轻量级
+**Squeeze-and-Excitation Block**，对每个特征通道学习可变权重，使网络自适应
+聚焦更具判别性的维度。实现见 `colab_final/train_advanced.py`。
 
-- `random_rotate_point_cloud`：随机旋转
-- `jitter_point_cloud`：抖动加噪
+**动机**：原始 PointNet 对 1024 维全局特征一视同仁；SE-Block 以极小参数开销
+（~130K）赋予通道级注意力，改善细粒度形状类别区分能力。
 
-重新训练并记录精度，详见 [`experiments/augmentation/`](experiments/augmentation/)。
+参考：Hu et al. "Squeeze-and-Excitation Networks." CVPR 2018.
 
-### B. SE-Block 通道注意力
+详见 [`experiments/attention/`](experiments/attention/)。
 
-在 `pointnet.py` 特征提取层后插入轻量级 SE-Block，再次训练并记录精度变化，详见 [`experiments/attention/`](experiments/attention/)。
+### B. 数据修改：全 SO(3) 旋转 + 裁剪抖动
+
+用均匀采样 SO(3) 空间的三维随机旋转（`--enhanced_aug` 标志）替代 Baseline
+的单轴旋转，并将抖动噪声放大至 σ=0.04（裁剪至 ±0.05），提升旋转不变性与
+噪声鲁棒性。实现见 `colab_final/train_advanced.py`。
+
+**动机**：Baseline 只旋转 Y 轴，模型对任意姿态泛化弱；全 SO(3) 旋转迫使网络学习
+真正旋转不变的表示，解决 PointNet 的已知局限之一。
+
+详见 [`experiments/augmentation/`](experiments/augmentation/)。
+
+### 运行命令
+
+```bash
+bash colab_final/train_advanced.sh
+# 或
+bash scripts/train_advanced.sh
+```
+
+完成后精度记录于 `cls_advanced/final_accuracy.txt`，对比表见 [`results/metrics_template.csv`](results/metrics_template.csv)。
 
 ---
 

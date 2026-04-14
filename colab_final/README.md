@@ -11,6 +11,8 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 - `train_baseline.sh`: 运行 PointNet Baseline 训练（ModelNet40 主线）
 - `train_cross_dataset.sh`: 运行 PointNet 跨数据集训练（ModelNet10 子集）
 - `train_dgcnn.sh`: 运行 DGCNN 对比实验训练
+- `train_advanced.py`: PointNet + SE-Block + 增强数据增强训练入口（Advanced 2.2）
+- `train_advanced.sh`: 运行进阶修改训练（SE-Attention + 全 SO(3) 旋转）
 
 ## 建议使用顺序（Colab）
 
@@ -37,6 +39,12 @@ bash colab_final/train_cross_dataset.sh
 
 ```bash
 bash colab_final/train_dgcnn.sh
+```
+
+6. 执行进阶修改训练 SE-Attention + 增强数据增强（Advanced 2.2，可选）：
+
+```bash
+bash colab_final/train_advanced.sh
 ```
 
 ## 备注

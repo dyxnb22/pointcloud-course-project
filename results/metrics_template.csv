@@ -1,5 +1,5 @@
 experiment,accuracy,notes
 baseline_pointnet,,
 pointnet_plus_augmentation,,
-pointnet_plus_augmentation_plus_se,,
+pointnet_plus_augmentation_plus_se,,运行 colab_final/train_advanced.sh 后填写 cls_advanced/final_accuracy.txt
 dgcnn_sota,,

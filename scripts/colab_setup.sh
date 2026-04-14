@@ -8,7 +8,6 @@ echo "==> 1. Cloning repositories..."
 
 echo "==> 2. Installing dependencies..."
 pip install -e ./pointnet.pytorch
-pip install -q huggingface_hub
 
 DATA_DIR="pointnet.pytorch/data"
 mkdir -p "${DATA_DIR}"
@@ -25,8 +24,8 @@ else
   mirrors=(
     "https://huggingface.co/datasets/Msun/modelnet40/resolve/main/modelnet40_ply_hdf5_2048.zip"
     "https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip"
-    "https://github.com/charlesq34/pointnet/raw/master/data/modelnet40_ply_hdf5_2048.zip"
-    "https://github.com/yanx27/Pointnet_Pointnet2_pytorch/raw/master/data/modelnet40_ply_hdf5_2048.zip"
+    "https://raw.githubusercontent.com/charlesq34/pointnet/2618f72bc1a0fd21b074096e748016960d44ef55/data/modelnet40_ply_hdf5_2048.zip"
+    "https://raw.githubusercontent.com/yanx27/Pointnet_Pointnet2_pytorch/eb64fe0b4c24055559cea26299cb485dcb43d8dd/data/modelnet40_ply_hdf5_2048.zip"
   )
 
   downloaded=0
@@ -103,23 +102,36 @@ else
 import os
 import shutil
 import sys
+import time
+import urllib.error
+import urllib.request
 import zipfile
-
-from huggingface_hub import hf_hub_download
 
 data_dir = sys.argv[1]
 target_dir = sys.argv[2]
-token = os.environ.get("HF_TOKEN", os.environ.get("HUGGINGFACE_TOKEN", ""))
 temp_dir = os.path.join(data_dir, "temp_shapenet")
 os.makedirs(temp_dir, exist_ok=True)
 zip_name = "shapenetcore_partanno_segmentation_benchmark_v0.zip"
 manual_zip_env = os.environ.get("SHAPENET_ZIP_PATH", "").strip()
+mirror_urls_env = os.environ.get("SHAPENET_URLS", "").strip()
+connect_timeout = int(os.environ.get("MIRROR_TIMEOUT_SECONDS", "90"))
+total_timeout = int(os.environ.get("MIRROR_TOTAL_TIMEOUT_SECONDS", "900"))
+download_zip_path = os.path.join(data_dir, f".{zip_name}.download")
 
-mirrors = [
-    "gourmet/ShapeNetCore_partanno_segmentation_benchmark_v0",
-    "wjh19/ShapeNetCore_partanno_segmentation_benchmark_v0",
-    "jason233/ShapeNetCore_partanno_segmentation_benchmark_v0",
+default_mirror_urls = [
+    "https://shapenet.cs.stanford.edu/media/shapenetcore_partanno_segmentation_benchmark_v0.zip",
+    "https://raw.githubusercontent.com/charlesq34/pointnet/2618f72bc1a0fd21b074096e748016960d44ef55/shapenetcore_partanno_segmentation_benchmark_v0.zip",
 ]
+if mirror_urls_env:
+    mirror_urls = [u.strip() for u in mirror_urls_env.split(",") if u.strip()]
+else:
+    mirror_urls = default_mirror_urls
+
+ALLOWED_CONTENT_TYPES = {
+    "application/zip",
+    "application/x-zip-compressed",
+    "application/octet-stream",
+}
 
 def reset_temp_dir(work_dir):
     shutil.rmtree(work_dir, ignore_errors=True)
@@ -154,6 +166,50 @@ def extract_and_organize(zip_path, source_name, work_dir, output_dir):
             else:
                 shutil.copy2(src, dst)
 
+def safe_remove(path):
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+    except OSError:
+        pass
+
+def download_file(url, dst):
+    start_time = time.monotonic()
+    try:
+        with urllib.request.urlopen(url, timeout=connect_timeout) as response:
+            content_type_header = response.headers.get("Content-Type", "")
+            normalized_content_type = content_type_header.lower().split(";", 1)[0].strip()
+            if not normalized_content_type:
+                print(f"[warning] Missing Content-Type for {url}; continuing with archive extraction validation.")
+            elif normalized_content_type not in ALLOWED_CONTENT_TYPES:
+                raise RuntimeError(
+                    f"Unexpected content type for {url}: {content_type_header}"
+                )
+            timeout_reached = False
+            timeout_check_interval_chunks = 8
+            chunk_counter = 0
+            with open(dst, "wb") as f:
+                while True:
+                    chunk = response.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    chunk_counter += 1
+                    if chunk_counter >= timeout_check_interval_chunks:
+                        if time.monotonic() - start_time >= total_timeout:
+                            timeout_reached = True
+                            break
+                        chunk_counter = 0
+            if timeout_reached:
+                safe_remove(dst)
+                raise TimeoutError(f"total download timeout exceeded: {total_timeout}s")
+    except urllib.error.HTTPError as e:
+        safe_remove(dst)
+        raise RuntimeError(f"HTTP {e.code} while downloading {url}") from e
+    except Exception:
+        safe_remove(dst)
+        raise
+
 success = False
 try:
     local_zip_candidates = []
@@ -182,24 +238,22 @@ try:
             print(f"Local archive failed: {local_zip} ({e})", file=sys.stderr)
 
     if not success:
-        for repo in mirrors:
-            print(f"Trying ShapeNet mirror: {repo}")
+        for mirror_url in mirror_urls:
+            print(f"Trying ShapeNet mirror: {mirror_url}")
             try:
-                kwargs = {
-                    "repo_id": repo,
-                    "filename": zip_name,
-                    "repo_type": "dataset",
-                }
-                if token:
-                    kwargs["token"] = token
-                zip_path = hf_hub_download(**kwargs)
-                extract_and_organize(zip_path, f"mirror {repo}", temp_dir, target_dir)
+                download_file(mirror_url, download_zip_path)
+                extract_and_organize(download_zip_path, f"mirror {mirror_url}", temp_dir, target_dir)
                 success = True
                 break
             except Exception as e:
-                print(f"Mirror failed: {repo} ({e})", file=sys.stderr)
+                print(f"Mirror failed: {mirror_url} ({e})", file=sys.stderr)
 finally:
     shutil.rmtree(temp_dir, ignore_errors=True)
+    if os.path.exists(download_zip_path):
+        try:
+            os.remove(download_zip_path)
+        except OSError as e:
+            print(f"[cleanup-warning] failed to remove download file: {e}", file=sys.stderr)
 
 if not success:
     print(

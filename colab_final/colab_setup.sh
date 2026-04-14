@@ -107,7 +107,7 @@ from huggingface_hub import hf_hub_download
 
 data_dir = sys.argv[1]
 target_dir = sys.argv[2]
-token = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] else ""
+token = sys.argv[3] if len(sys.argv) > 3 else ""
 temp_dir = os.path.join(data_dir, "temp_shapenet")
 os.makedirs(temp_dir, exist_ok=True)
 

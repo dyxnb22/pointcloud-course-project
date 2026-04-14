@@ -104,11 +104,10 @@ class ModelNetH5Dataset(torch.utils.data.Dataset):
 
         if self.data_augmentation:
             choice = np.random.choice(points.shape[0], self.npoints, replace=True)
-        elif points.shape[0] >= self.npoints:
-            choice = np.arange(self.npoints)
         else:
-            repeats = int(np.ceil(self.npoints / points.shape[0]))
-            choice = np.tile(np.arange(points.shape[0]), repeats)[: self.npoints]
+            rng = np.random.default_rng(seed=index)
+            replace = points.shape[0] < self.npoints
+            choice = rng.choice(points.shape[0], self.npoints, replace=replace)
         points = points[choice, :]
         points = self._normalize(points)
 
@@ -200,7 +199,7 @@ def main():
             correct = pred_choice.eq(target.data).sum().item()
             print(
                 "[%d: %d/%d] train loss: %f accuracy: %f"
-                % (epoch, i, num_batch, loss.item(), correct / float(opt.batchSize))
+                % (epoch, i, num_batch, loss.item(), correct / float(points.size(0)))
             )
 
             if i % 10 == 0:
@@ -224,7 +223,7 @@ def main():
                         num_batch,
                         blue("test"),
                         loss_t.item(),
-                        correct_t / float(opt.batchSize),
+                        correct_t / float(points_t.size(0)),
                     )
                 )
 

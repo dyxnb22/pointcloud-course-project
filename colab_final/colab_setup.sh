@@ -149,6 +149,8 @@ os.makedirs(target_dir, exist_ok=True)
 
 
 def detect_list_line(split_name: str, default_filename: str) -> str:
+    # Reuse source list-path style when possible (e.g. data/modelnetXX/...),
+    # otherwise safely fall back to the local output filename.
     candidate_list = os.path.join(source_dir, f"{split_name}_files.txt")
     if not os.path.isfile(candidate_list):
         return default_filename
@@ -215,16 +217,21 @@ test_h5 = build_split("test")
 with open(os.path.join(target_dir, "shape_names.txt"), "w", encoding="utf-8") as f:
     f.write("\n".join(selected_classes))
 
-train_list_line = detect_list_line("train", train_h5)
-test_list_line = detect_list_line("test", test_h5)
-for filename, line in (
-    ("train_files.txt", train_list_line),
-    ("test_files.txt", test_list_line),
+train_files_list_entry = detect_list_line("train", train_h5)
+test_files_list_entry = detect_list_line("test", test_h5)
+for filename, list_entry in (
+    ("train_files.txt", train_files_list_entry),
+    ("test_files.txt", test_files_list_entry),
+):
+    with open(os.path.join(target_dir, filename), "w", encoding="utf-8") as f:
+        f.write(f"{list_entry}\n")
+
+for filename, generated_h5_name in (
     ("train_hdf5_file_list.txt", train_h5),
     ("test_hdf5_file_list.txt", test_h5),
 ):
     with open(os.path.join(target_dir, filename), "w", encoding="utf-8") as f:
-        f.write(f"{line}\n")
+        f.write(f"{generated_h5_name}\n")
 
 print(f"Prepared ModelNet10 subset at: {target_dir}")
 PY

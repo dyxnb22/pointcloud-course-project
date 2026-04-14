@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # train_cross_dataset.sh - 在 ModelNet10 子集上运行 PointNet 分类训练（跨数据集验证）
+# 说明：上游 train_classification.py 仅支持 dataset_type=shapenet|modelnet40，
+# 因此这里对 ModelNet10 子集沿用 modelnet40 加载分支。
 set -e
 
 if [ ! -d "pointnet.pytorch" ]; then
@@ -13,7 +15,7 @@ if [ ! -d "${DATASET_PATH}" ]; then
   exit 1
 fi
 
-echo "==> 开始训练 PointNet 分类模型（跨数据集：ModelNet10 子集）..."
+echo "==> 开始训练 PointNet 分类模型（跨数据集：ModelNet10 子集，使用 modelnet40 加载分支）..."
 python pointnet.pytorch/utils/train_classification.py \
   --dataset "${DATASET_PATH}" \
   --nepoch=20 \

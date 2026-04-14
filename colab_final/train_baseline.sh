@@ -14,7 +14,7 @@ if [ ! -d "${DATASET_PATH}" ]; then
 fi
 
 echo "==> 开始训练 PointNet 分类模型..."
-python pointnet.pytorch/utils/train_classification.py \
+python colab_final/train_classification_h5.py \
   --dataset "${DATASET_PATH}" \
   --nepoch=20 \
   --dataset_type modelnet40

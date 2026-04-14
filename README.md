@@ -85,7 +85,7 @@ bash scripts/colab_setup.sh
 ### 2.2 训练命令
 
 ```bash
-!python pointnet.pytorch/utils/train_classification.py \
+!python scripts/train_classification_h5.py \
   --dataset pointnet.pytorch/data/modelnet40_ply_hdf5_2048 \
   --nepoch=20 \
   --dataset_type modelnet40
@@ -97,7 +97,7 @@ bash scripts/colab_setup.sh
 bash scripts/train_baseline.sh
 ```
 
-> **注意**：不同上游版本路径参数可能略有差异，若报错请先查阅 `train_classification.py` 的 `--help` 说明。
+> **注意**：本仓库使用 `scripts/train_classification_h5.py` 作为 PointNet 的 HDF5 兼容训练入口。
 
 ---
 

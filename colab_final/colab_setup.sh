@@ -139,6 +139,9 @@ if missing:
 
 selected_source_ids = [source_class_to_id[name] for name in selected_classes]
 old_to_new_label = {old_id: new_id for new_id, old_id in enumerate(selected_source_ids)}
+label_mapping = np.full(len(source_classes), -1, dtype=np.int64)
+for old_id, new_id in old_to_new_label.items():
+    label_mapping[old_id] = new_id
 
 if os.path.exists(target_dir):
     shutil.rmtree(target_dir)
@@ -179,7 +182,7 @@ def build_split(split: str):
         if not np.any(mask):
             continue
         filtered_data = data[mask]
-        remapped_label = np.vectorize(old_to_new_label.get)(label_flat[mask]).astype(np.int64).reshape(-1, 1)
+        remapped_label = label_mapping[label_flat[mask]].reshape(-1, 1)
         kept_data.append(filtered_data)
         kept_label.append(remapped_label)
 

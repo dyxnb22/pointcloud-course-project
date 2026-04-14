@@ -58,8 +58,8 @@ except Exception as e:
     try:
         if os.path.exists(dst):
             os.remove(dst)
-    except OSError as cleanup_warning:
-        print(f"[cleanup-warning] failed to remove partial file: {cleanup_warning}", file=sys.stderr)
+    except OSError as cleanup_error:
+        print(f"[cleanup-warning] failed to remove partial file: {cleanup_error}", file=sys.stderr)
     print(f"[download-error] {e}", file=sys.stderr)
     sys.exit(1)
 PY

@@ -186,7 +186,7 @@ def download_file(url, dst):
                     f"Unexpected content type for {url}: {content_type_header}"
                 )
             timeout_reached = False
-            check_timeout_every_chunks = 8
+            timeout_check_interval_chunks = 8
             chunk_counter = 0
             with open(dst, "wb") as f:
                 while True:
@@ -195,7 +195,7 @@ def download_file(url, dst):
                         break
                     f.write(chunk)
                     chunk_counter += 1
-                    if chunk_counter >= check_timeout_every_chunks:
+                    if chunk_counter >= timeout_check_interval_chunks:
                         if time.monotonic() - start_time >= total_timeout:
                             timeout_reached = True
                             break

@@ -127,6 +127,12 @@ if mirror_urls_env:
 else:
     mirror_urls = default_mirror_urls
 
+ALLOWED_CONTENT_TYPES = {
+    "application/zip",
+    "application/x-zip-compressed",
+    "application/octet-stream",
+}
+
 def reset_temp_dir(work_dir):
     shutil.rmtree(work_dir, ignore_errors=True)
     os.makedirs(work_dir, exist_ok=True)
@@ -165,14 +171,9 @@ def download_file(url, dst):
     try:
         with urllib.request.urlopen(url, timeout=connect_timeout) as response:
             content_type_header = response.headers.get("Content-Type", "")
-            content_type = content_type_header.lower()
-            normalized_content_type = content_type.split(";", 1)[0].strip()
-            allowed_content_types = {
-                "application/zip",
-                "application/x-zip-compressed",
-                "application/octet-stream",
-            }
-            if normalized_content_type and normalized_content_type not in allowed_content_types:
+            content_type_lower = content_type_header.lower()
+            normalized_content_type = content_type_lower.split(";", 1)[0].strip()
+            if normalized_content_type and normalized_content_type not in ALLOWED_CONTENT_TYPES:
                 raise RuntimeError(
                     f"Unexpected content type for {url}: {content_type_header}"
                 )

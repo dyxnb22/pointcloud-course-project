@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+from __future__ import print_function
+
+import argparse
+import csv
+import json
+import os
+
+import torch
+import torch.nn.functional as F
+import torch.utils.data
+from pointnet.model import PointNetCls
+
+from train_classification_h5 import ModelNetH5Dataset
+
+
+def _load_state_dict(model_path):
+    ckpt = torch.load(model_path, map_location="cpu")
+    if isinstance(ckpt, dict):
+        for key in ("state_dict", "model_state_dict"):
+            if key in ckpt and isinstance(ckpt[key], dict):
+                return ckpt[key]
+    return ckpt
+
+
+def _infer_num_classes(state_dict):
+    for key, value in state_dict.items():
+        if key.endswith("fc3.weight") and hasattr(value, "shape") and len(value.shape) == 2:
+            return int(value.shape[0])
+    raise ValueError("无法从权重中推断类别数（未找到 fc3.weight）。")
+
+
+def _infer_feature_transform(state_dict):
+    return any("fstn" in k for k in state_dict.keys())
+
+
+def evaluate(model, dataloader, device):
+    model.eval()
+    total_loss = 0.0
+    total_correct = 0
+    total_samples = 0
+    with torch.no_grad():
+        for points, target in dataloader:
+            points = points.transpose(2, 1).to(device)
+            target = target.to(device)
+            pred, _, _ = model(points)
+            total_loss += F.nll_loss(pred, target, reduction="sum").item()
+            total_correct += pred.data.max(1)[1].eq(target.data).sum().item()
+            total_samples += points.size(0)
+    if total_samples == 0:
+        raise RuntimeError("测试集为空，无法评测。")
+    return total_loss / total_samples, total_correct / total_samples, total_samples
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Evaluate pretrained PointNet on HDF5 ModelNet dataset.")
+    parser.add_argument("--dataset", required=True, help="dataset path, e.g. pointnet.pytorch/data/modelnet10_ply_hdf5_2048")
+    parser.add_argument("--model", required=True, help="pretrained model path")
+    parser.add_argument("--out_dir", required=True, help="output directory")
+    parser.add_argument("--batchSize", type=int, default=32, help="input batch size")
+    parser.add_argument("--num_points", type=int, default=2500, help="number of input points")
+    parser.add_argument("--workers", type=int, default=4, help="number of data loading workers")
+    args = parser.parse_args()
+
+    os.makedirs(args.out_dir, exist_ok=True)
+
+    test_dataset = ModelNetH5Dataset(
+        root=args.dataset,
+        split="test",
+        npoints=args.num_points,
+        data_augmentation=False,
+    )
+    test_dataloader = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=args.batchSize,
+        shuffle=False,
+        num_workers=int(args.workers),
+    )
+
+    state_dict = _load_state_dict(args.model)
+    num_classes = _infer_num_classes(state_dict)
+    feature_transform = _infer_feature_transform(state_dict)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    classifier = PointNetCls(k=num_classes, feature_transform=feature_transform).to(device)
+    classifier.load_state_dict(state_dict, strict=True)
+
+    test_loss, test_acc, test_samples = evaluate(classifier, test_dataloader, device)
+
+    metrics_path = os.path.join(args.out_dir, "metrics.csv")
+    with open(metrics_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["epoch", "train_loss", "train_acc", "test_loss", "test_acc", "lr"])
+        writer.writerow([0, f"{test_loss:.4f}", f"{test_acc:.4f}", f"{test_loss:.4f}", f"{test_acc:.4f}", "0.00000000"])
+
+    summary = {
+        "dataset": args.dataset,
+        "model": args.model,
+        "num_classes_from_checkpoint": num_classes,
+        "feature_transform_from_checkpoint": feature_transform,
+        "test_samples": test_samples,
+        "test_loss": round(test_loss, 6),
+        "test_acc": round(test_acc, 6),
+    }
+    with open(os.path.join(args.out_dir, "eval_summary.json"), "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+
+    with open(os.path.join(args.out_dir, "accuracy.txt"), "w", encoding="utf-8") as f:
+        f.write("epoch,train_acc,test_acc\n")
+        f.write(f"0,{test_acc:.6f},{test_acc:.6f}\n")
+    with open(os.path.join(args.out_dir, "loss.txt"), "w", encoding="utf-8") as f:
+        f.write("epoch,train_loss,test_loss\n")
+        f.write(f"0,{test_loss:.6f},{test_loss:.6f}\n")
+
+    print("==> 评测完成")
+    print(f"    test_loss: {test_loss:.4f}")
+    print(f"    test_acc : {test_acc:.4f}")
+    print(f"    输出目录 : {args.out_dir}")
+    print(f"    指标文件 : {metrics_path}")
+
+
+if __name__ == "__main__":
+    main()

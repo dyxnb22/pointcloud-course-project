@@ -10,6 +10,7 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 - `train_classification_h5.py`: PointNet 分类训练入口（兼容 `modelnet40_ply_hdf5_2048`）
 - `train_baseline.sh`: 运行 PointNet Baseline 训练（ModelNet40 主线）
 - `train_cross_dataset.sh`: 运行 PointNet 跨数据集训练（ModelNet10 子集）
+- `eval_model10_pretrained.sh`: 使用已训练权重在 ModelNet10 单独评测并导出独立结果目录与对比图
 - `train_dgcnn.sh`: 运行 DGCNN 对比实验训练
 - `train_advanced.sh`: **[2.2]** 运行 PointNet 高级扩展实验（label smoothing + scale augment + feature transform + CSV 指标记录）
 - `package_final.sh`: 一键收集产物到 `final/` 并打包 `final_submission.zip`
@@ -39,19 +40,25 @@ bash colab_final/train_baseline.sh
 bash colab_final/train_cross_dataset.sh
 ```
 
-5. 执行 DGCNN 对比实验：
+5. 仅评测已训练权重到 ModelNet10（不重训）并导出独立目录：
+
+```bash
+bash colab_final/eval_model10_pretrained.sh
+```
+
+6. 执行 DGCNN 对比实验：
 
 ```bash
 bash colab_final/train_dgcnn.sh
 ```
 
-6. **[2.2]** 执行高级扩展实验（Advanced Requirement 2.2）：
+7. **[2.2]** 执行高级扩展实验（Advanced Requirement 2.2）：
 
 ```bash
 bash colab_final/train_advanced.sh
 ```
 
-7. 一键打包提交文件（创建 `final/` 并生成压缩包）：
+8. 一键打包提交文件（创建 `final/` 并生成压缩包）：
 
 ```bash
 bash colab_final/package_final.sh
@@ -72,6 +79,9 @@ bash colab_final/package_final.sh
 | `train_cross_dataset.sh` | `cls_cross/best_model.pth` | 跨数据集最优模型（按每轮 test_acc 自动更新） |
 | `train_cross_dataset.sh` | `cls_cross/metrics.csv` | 每轮 `epoch,train_loss,train_acc,test_loss,test_acc,lr` |
 | `train_cross_dataset.sh` | `cls_cross/loss.txt` / `cls_cross/accuracy.txt` | 每轮 loss/accuracy 文本记录 |
+| `eval_model10_pretrained.sh` | `model10_eval/baseline/metrics.csv` | baseline 权重在 ModelNet10 的单次评测指标 |
+| `eval_model10_pretrained.sh` | `model10_eval/advanced/metrics.csv` | advanced 权重在 ModelNet10 的单次评测指标 |
+| `eval_model10_pretrained.sh` | `model10_eval/curve_compare_*.png` | baseline vs advanced 的 ModelNet10 对比图（loss/accuracy/lr） |
 | `train_dgcnn.sh` | `dgcnn/pytorch/checkpoints/dgcnn_test/models/model.t7` | DGCNN 最佳模型权重 |
 | `train_dgcnn.sh` | `dgcnn/pytorch/checkpoints/dgcnn_test/run.log` | DGCNN 训练日志 |
 | `train_advanced.sh` | `cls_advanced/cls_model_<epoch>.pth` | Advanced 每轮模型权重 |

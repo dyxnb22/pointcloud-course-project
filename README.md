@@ -18,10 +18,11 @@ pointcloud-course-project/
 ├── notebooks/          # Google Colab 笔记本
 ├── scripts/            # 一键运行脚本
 │   ├── colab_setup.sh
-│   ├── train_baseline.sh
-│   ├── train_cross_dataset.sh
-│   ├── train_dgcnn.sh
-│   └── package_final.sh
+ │   ├── train_baseline.sh
+ │   ├── train_cross_dataset.sh
+ │   ├── eval_model10_pretrained.sh
+ │   ├── train_dgcnn.sh
+ │   └── package_final.sh
 ├── experiments/        # 各阶段实验记录
 │   ├── baseline/
 │   ├── augmentation/
@@ -44,6 +45,7 @@ pointcloud-course-project/
 - `colab_final/colab_setup.sh`
 - `colab_final/train_baseline.sh`
 - `colab_final/train_cross_dataset.sh`
+- `colab_final/eval_model10_pretrained.sh`
 - `colab_final/train_dgcnn.sh`
 - `colab_final/package_final.sh`
 
@@ -116,6 +118,14 @@ PointNet 典型缺点：**局部特征提取能力弱、对噪声敏感**。
 ```bash
 bash scripts/train_cross_dataset.sh
 ```
+
+若只想使用已训练好的权重在 ModelNet10 **单独评测（不重训）**，并把结果与对比图导出到独立目录：
+
+```bash
+bash scripts/eval_model10_pretrained.sh
+```
+
+> 默认读取 `cls/best_model.pth` 与 `cls_advanced/best_model.pth`，输出到 `model10_eval/`（含 baseline/advanced 指标与 3 张对比图）。
 
 ---
 

@@ -28,4 +28,7 @@ python "${SCRIPT_DIR}/train_classification_h5.py" \
 echo ""
 echo "==> baseline 训练完成。输出文件："
 echo "    模型权重: ${OUTPUT_DIR}/cls_model_*.pth"
+echo "    最优模型: ${OUTPUT_DIR}/best_model.pth"
 echo "    每轮指标: ${CSV_PATH}"
+echo "    每轮loss: ${OUTPUT_DIR}/loss.txt"
+echo "    每轮acc : ${OUTPUT_DIR}/accuracy.txt"

@@ -10,10 +10,11 @@ DATASET_PATH="pointnet.pytorch/data/modelnet10_ply_hdf5_2048"
 BASELINE_MODEL="cls/best_model.pth"
 ADVANCED_MODEL="cls_advanced/best_model.pth"
 OUT_DIR="model10_eval"
+ZIP_PATH=""
 
 usage() {
   echo "用法:"
-  echo "  bash colab_final/eval_model10_pretrained.sh [--dataset PATH] [--baseline_model PATH] [--advanced_model PATH] [--out_dir DIR]"
+  echo "  bash colab_final/eval_model10_pretrained.sh [--dataset PATH] [--baseline_model PATH] [--advanced_model PATH] [--out_dir DIR] [--zip_path FILE]"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -34,6 +35,10 @@ while [[ $# -gt 0 ]]; do
       OUT_DIR="$2"
       shift 2
       ;;
+    --zip_path)
+      ZIP_PATH="$2"
+      shift 2
+      ;;
     -h|--help)
       usage
       exit 0
@@ -45,6 +50,10 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [ -z "${ZIP_PATH}" ]; then
+  ZIP_PATH="${OUT_DIR%/}.zip"
+fi
 
 if [ ! -d "pointnet.pytorch" ]; then
   echo "错误：找不到 pointnet.pytorch，请先运行: bash colab_final/colab_setup.sh"
@@ -87,6 +96,14 @@ python "${SCRIPT_DIR}/plot_compare.py" \
   --out "${OUT_DIR}/curve_compare.png" \
   --title "ModelNet10 Eval (Pretrained Weights)"
 
+if ! command -v zip >/dev/null 2>&1; then
+  echo "错误：系统未安装 zip，无法打包。请先安装 zip 命令。"
+  exit 1
+fi
+echo "==> [4/4] 打包输出目录..."
+rm -f "${ZIP_PATH}"
+zip -r "${ZIP_PATH}" "${OUT_DIR}" >/dev/null
+
 echo ""
 echo "✅ 已完成 ModelNet10 独立评测，输出目录：${OUT_DIR}"
 echo "   - ${BASE_OUT}/metrics.csv"
@@ -94,3 +111,4 @@ echo "   - ${ADV_OUT}/metrics.csv"
 echo "   - ${OUT_DIR}/curve_compare_loss.png"
 echo "   - ${OUT_DIR}/curve_compare_accuracy.png"
 echo "   - ${OUT_DIR}/curve_compare_lr.png"
+echo "   - ${ZIP_PATH}"

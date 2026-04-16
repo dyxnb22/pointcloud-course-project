@@ -125,7 +125,7 @@ bash scripts/train_cross_dataset.sh
 bash scripts/eval_model10_pretrained.sh
 ```
 
-> 默认读取 `cls/best_model.pth` 与 `cls_advanced/best_model.pth`，输出到 `model10_eval/`（含 baseline/advanced 指标与 3 张对比图）。
+> 默认读取 `cls/best_model.pth` 与 `cls_advanced/best_model.pth`，输出到 `model10_eval/`（含 baseline/advanced 指标与 3 张对比图），并自动打包为 `model10_eval.zip`（可用 `--zip_path` 自定义）。
 
 ---
 

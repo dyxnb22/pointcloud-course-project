@@ -10,7 +10,7 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 - `train_classification_h5.py`: PointNet 分类训练入口（兼容 `modelnet40_ply_hdf5_2048`）
 - `train_baseline.sh`: 运行 PointNet Baseline 训练（ModelNet40 主线）
 - `train_cross_dataset.sh`: 运行 PointNet 跨数据集训练（ModelNet10 子集）
-- `eval_model10_pretrained.sh`: 使用已训练权重在 ModelNet10 单独评测并导出独立结果目录与对比图
+- `eval_model10_pretrained.sh`: 使用已训练权重在 ModelNet10 单独评测并导出独立结果目录、对比图与压缩包
 - `train_dgcnn.sh`: 运行 DGCNN 对比实验训练
 - `train_advanced.sh`: **[2.2]** 运行 PointNet 高级扩展实验（label smoothing + scale augment + feature transform + CSV 指标记录）
 - `package_final.sh`: 一键收集产物到 `final/` 并打包 `final_submission.zip`
@@ -82,6 +82,7 @@ bash colab_final/package_final.sh
 | `eval_model10_pretrained.sh` | `model10_eval/baseline/metrics.csv` | baseline 权重在 ModelNet10 的单次评测指标 |
 | `eval_model10_pretrained.sh` | `model10_eval/advanced/metrics.csv` | advanced 权重在 ModelNet10 的单次评测指标 |
 | `eval_model10_pretrained.sh` | `model10_eval/curve_compare_*.png` | baseline vs advanced 的 ModelNet10 对比图（loss/accuracy/lr） |
+| `eval_model10_pretrained.sh` | `model10_eval.zip` | 默认将整个 `model10_eval/` 打包为压缩包（可通过 `--zip_path` 自定义） |
 | `train_dgcnn.sh` | `dgcnn/pytorch/checkpoints/dgcnn_test/models/model.t7` | DGCNN 最佳模型权重 |
 | `train_dgcnn.sh` | `dgcnn/pytorch/checkpoints/dgcnn_test/run.log` | DGCNN 训练日志 |
 | `train_advanced.sh` | `cls_advanced/cls_model_<epoch>.pth` | Advanced 每轮模型权重 |

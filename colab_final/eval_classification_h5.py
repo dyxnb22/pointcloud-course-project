@@ -89,6 +89,28 @@ def _infer_feature_transform(state_dict):
     return any("fstn" in k for k in state_dict.keys())
 
 
+def _load_model_state_dict_compat(model, state_dict):
+    try:
+        model.load_state_dict(state_dict, strict=True)
+        return
+    except RuntimeError as strict_exc:
+        print("==> Warning: strict=True 加载权重失败，尝试兼容模式 strict=False。")
+        incompatible = model.load_state_dict(state_dict, strict=False)
+        missing = list(incompatible.missing_keys)
+        unexpected = list(incompatible.unexpected_keys)
+        critical_missing = [k for k in missing if not k.endswith("num_batches_tracked")]
+        if critical_missing:
+            raise RuntimeError(
+                "权重与模型结构不兼容，无法安全加载。"
+                f" 关键缺失键: {critical_missing[:10]}"
+            ) from strict_exc
+        if missing or unexpected:
+            print(
+                "==> Warning: 兼容加载成功。"
+                f" missing_keys={len(missing)}, unexpected_keys={len(unexpected)}"
+            )
+
+
 def _maybe_remap_labels(dataset, num_classes):
     labels = np.asarray(dataset.label, dtype=np.int64)
     if labels.size == 0:
@@ -184,7 +206,7 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     classifier = PointNetCls(k=num_classes, feature_transform=feature_transform).to(device)
-    classifier.load_state_dict(state_dict, strict=True)
+    _load_model_state_dict_compat(classifier, state_dict)
 
     try:
         test_loss, test_acc, test_samples = evaluate(classifier, test_dataloader, device)

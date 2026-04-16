@@ -44,8 +44,10 @@ pointcloud-course-project/
 - `colab_final/colab_setup.sh`
 - `colab_final/train_baseline.sh`
 - `colab_final/train_cross_dataset.sh`
+- `colab_final/train_advanced_modelnet10.sh`
 - `colab_final/train_dgcnn.sh`
 - `colab_final/package_final.sh`
+- `colab_final/package_modelnet10_compare.sh`
 
 ---
 
@@ -117,6 +119,12 @@ PointNet 典型缺点：**局部特征提取能力弱、对噪声敏感**。
 bash scripts/train_cross_dataset.sh
 ```
 
+跨数据集 Advanced（ModelNet10 子集，鲁棒性验证）：
+
+```bash
+bash scripts/train_advanced_modelnet10.sh
+```
+
 ---
 
 ## 4. 进阶修改（消融实验，占 20%）
@@ -169,6 +177,12 @@ bash scripts/train_dgcnn.sh
 
 ```bash
 bash scripts/package_final.sh
+```
+
+如需导出 ModelNet10 Baseline vs Advanced 对比结果（新文件夹 + 压缩包）：
+
+```bash
+bash scripts/package_modelnet10_compare.sh
 ```
 
 > 脚本会尝试自动运行 `colab_final/plot_compare.py` 生成 3 张独立图片：`curve_compare_loss.png`、`curve_compare_accuracy.png`、`curve_compare_lr.png`（需存在 `cls/metrics.csv` 与 `cls_advanced/metrics.csv`），并将这些图片一并打包。

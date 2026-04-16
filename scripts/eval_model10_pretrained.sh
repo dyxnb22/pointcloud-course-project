@@ -2,11 +2,6 @@
 # eval_model10_pretrained.sh - 使用已训练权重在 ModelNet10 上单独评测并导出对比图
 set -euo pipefail
 
-if [ ! -d "pointnet.pytorch" ]; then
-  echo "错误：找不到 pointnet.pytorch，请先运行: bash scripts/colab_setup.sh"
-  exit 1
-fi
-
 DATASET_PATH="pointnet.pytorch/data/modelnet10_ply_hdf5_2048"
 BASELINE_MODEL="cls/best_model.pth"
 ADVANCED_MODEL="cls_advanced/best_model.pth"
@@ -46,6 +41,11 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [ ! -d "pointnet.pytorch" ]; then
+  echo "错误：找不到 pointnet.pytorch，请先运行: bash scripts/colab_setup.sh"
+  exit 1
+fi
 
 if [ ! -d "${DATASET_PATH}" ]; then
   echo "错误：找不到数据集文件夹 ${DATASET_PATH}，请先运行: bash scripts/colab_setup.sh"

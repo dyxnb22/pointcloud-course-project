@@ -17,11 +17,17 @@ if [ ! -d "${DATASET_PATH}" ]; then
   exit 1
 fi
 
+TRAIN_SCRIPT="${SCRIPT_DIR}/train_classification_h5.py"
+if [ ! -f "${TRAIN_SCRIPT}" ]; then
+  echo "错误：找不到训练脚本 ${TRAIN_SCRIPT}，请确认仓库完整"
+  exit 1
+fi
+
 OUTPUT_DIR="cls_cross_advanced"
 CSV_PATH="${OUTPUT_DIR}/metrics.csv"
 
 echo "==> 开始训练 PointNet Advanced（ModelNet10 子集，label smoothing + scale augment + feature transform）..."
-python "${SCRIPT_DIR}/train_classification_h5.py" \
+python "${TRAIN_SCRIPT}" \
   --dataset "${DATASET_PATH}" \
   --nepoch=20 \
   --dataset_type modelnet40 \

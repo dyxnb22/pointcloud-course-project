@@ -71,7 +71,7 @@ MANIFEST="${OUTPUT_DIR}/MANIFEST.txt"
 } > "${MANIFEST}"
 
 echo "==> 开始打包 ${ZIP_PATH}"
-zip -r "${ZIP_PATH}" "${OUTPUT_DIR}" >/dev/null
+zip -r "${ZIP_PATH}" "${OUTPUT_DIR}" 1>/dev/null
 
 echo ""
 echo "打包完成：${REPO_ROOT}/${ZIP_PATH}"

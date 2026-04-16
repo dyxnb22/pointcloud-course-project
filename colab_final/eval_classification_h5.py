@@ -6,6 +6,7 @@ import csv
 import json
 import os
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.utils.data
@@ -14,24 +15,73 @@ from pointnet.model import PointNetCls
 from train_classification_h5 import ModelNetH5Dataset
 
 
+def _is_tensor_state_dict(candidate):
+    return isinstance(candidate, dict) and bool(candidate) and all(
+        torch.is_tensor(v) for v in candidate.values()
+    )
+
+
+def _strip_module_prefix(state_dict):
+    if all(k.startswith("module.") for k in state_dict.keys()):
+        return {k[len("module."):]: v for k, v in state_dict.items()}
+    return state_dict
+
+
 def _load_state_dict(model_path):
     ckpt = torch.load(model_path, map_location="cpu")
+    if _is_tensor_state_dict(ckpt):
+        return _strip_module_prefix(ckpt)
     if isinstance(ckpt, dict):
-        for key in ("state_dict", "model_state_dict"):
-            if key in ckpt and isinstance(ckpt[key], dict):
-                return ckpt[key]
-    return ckpt
+        for key in ("state_dict", "model_state_dict", "model"):
+            if key in ckpt and _is_tensor_state_dict(ckpt[key]):
+                return _strip_module_prefix(ckpt[key])
+        for value in ckpt.values():
+            if _is_tensor_state_dict(value):
+                return _strip_module_prefix(value)
+    raise ValueError(f"无法从权重文件中解析有效 state_dict: {model_path}")
 
 
 def _infer_num_classes(state_dict):
     for key, value in state_dict.items():
         if key.endswith("fc3.weight") and hasattr(value, "shape") and len(value.shape) == 2:
             return int(value.shape[0])
+    for key, value in state_dict.items():
+        if key.endswith("fc3.bias") and hasattr(value, "shape") and len(value.shape) == 1:
+            return int(value.shape[0])
     raise ValueError("无法从权重中推断类别数（未找到 fc3.weight）。")
 
 
 def _infer_feature_transform(state_dict):
     return any("fstn" in k for k in state_dict.keys())
+
+
+def _maybe_remap_labels(dataset, num_classes):
+    labels = np.asarray(dataset.label, dtype=np.int64)
+    if labels.size == 0:
+        return False
+    min_label = int(labels.min())
+    max_label = int(labels.max())
+    if min_label < 0:
+        raise ValueError(f"检测到负标签值: min_label={min_label}")
+    if max_label < num_classes:
+        return False
+
+    unique_labels = sorted(np.unique(labels).tolist())
+    if len(unique_labels) > num_classes:
+        raise ValueError(
+            f"标签数量({len(unique_labels)})超过模型类别数({num_classes})，"
+            f"无法自动重映射。标签范围=[{min_label}, {max_label}]"
+        )
+
+    mapping = {old: new for new, old in enumerate(unique_labels)}
+    remapped = np.array([mapping[int(x)] for x in labels], dtype=np.int64)
+    dataset.label = remapped
+    if hasattr(dataset, "classes") and isinstance(dataset.classes, list) and dataset.classes:
+        dataset.classes = [
+            dataset.classes[idx] if 0 <= idx < len(dataset.classes) else str(idx)
+            for idx in unique_labels
+        ]
+    return True
 
 
 def evaluate(model, dataloader, device):
@@ -80,6 +130,9 @@ def main():
     state_dict = _load_state_dict(args.model)
     num_classes = _infer_num_classes(state_dict)
     feature_transform = _infer_feature_transform(state_dict)
+    remapped = _maybe_remap_labels(test_dataset, num_classes)
+    if remapped:
+        print("==> 检测到数据集标签非连续，已自动重映射到 [0, num_classes-1]")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     classifier = PointNetCls(k=num_classes, feature_transform=feature_transform).to(device)

@@ -20,7 +20,8 @@ pointcloud-course-project/
 │   ├── colab_setup.sh
 │   ├── train_baseline.sh
 │   ├── train_cross_dataset.sh
-│   └── train_dgcnn.sh
+│   ├── train_dgcnn.sh
+│   └── package_final.sh
 ├── experiments/        # 各阶段实验记录
 │   ├── baseline/
 │   ├── augmentation/
@@ -44,6 +45,7 @@ pointcloud-course-project/
 - `colab_final/train_baseline.sh`
 - `colab_final/train_cross_dataset.sh`
 - `colab_final/train_dgcnn.sh`
+- `colab_final/package_final.sh`
 
 ---
 
@@ -162,6 +164,17 @@ bash scripts/train_dgcnn.sh
 | `best_model.pth` | 最佳权重文件 |
 
 在 Colab 左侧文件栏找到后下载，课程提交压缩包中须包含这些文件。
+
+如需一键整理并打包提交文件：
+
+```bash
+bash scripts/package_final.sh
+```
+
+会在当前仓库根目录生成：
+
+- `final/`（收集后的文件夹）
+- `final_submission.zip`（可直接下载上传 GitHub）
 
 ---
 

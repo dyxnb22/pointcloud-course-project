@@ -12,6 +12,7 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 - `train_cross_dataset.sh`: 运行 PointNet 跨数据集训练（ModelNet10 子集）
 - `train_dgcnn.sh`: 运行 DGCNN 对比实验训练
 - `train_advanced.sh`: **[2.2]** 运行 PointNet 高级扩展实验（label smoothing + scale augment + feature transform + CSV 指标记录）
+- `package_final.sh`: 一键收集产物到 `final/` 并打包 `final_submission.zip`
 
 ## 建议使用顺序（Colab）
 
@@ -48,6 +49,12 @@ bash colab_final/train_dgcnn.sh
 
 ```bash
 bash colab_final/train_advanced.sh
+```
+
+7. 一键打包提交文件（创建 `final/` 并生成压缩包）：
+
+```bash
+bash colab_final/package_final.sh
 ```
 
 ---

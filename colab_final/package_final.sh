@@ -4,7 +4,7 @@ set -euo pipefail
 
 FINAL_DIR="final"
 ZIP_PATH="final_submission.zip"
-COMPARE_PNG="curve_compare.png"
+COMPARE_OUT_BASENAME="curve_compare.png"
 COMPARE_LOSS_PNG="curve_compare_loss.png"
 COMPARE_ACC_PNG="curve_compare_accuracy.png"
 COMPARE_LR_PNG="curve_compare_lr.png"
@@ -49,7 +49,7 @@ generate_compare_plot() {
   if MPLBACKEND=Agg python3 "${plot_script}" \
     --baseline "${baseline_csv}" \
     --advanced "${advanced_csv}" \
-    --out "${COMPARE_PNG}"; then
+    --out "${COMPARE_OUT_BASENAME}"; then
     echo "[OK] 已生成: ${COMPARE_LOSS_PNG}, ${COMPARE_ACC_PNG}, ${COMPARE_LR_PNG}"
   else
     echo "[WARN] 对比图生成失败，继续打包"

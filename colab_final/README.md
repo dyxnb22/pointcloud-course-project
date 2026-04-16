@@ -12,6 +12,7 @@ English: This folder is the consolidated Colab-ready entry for final submission.
 - `train_cross_dataset.sh`: 运行 PointNet 跨数据集训练（ModelNet10 子集）
 - `train_dgcnn.sh`: 运行 DGCNN 对比实验训练
 - `train_advanced.sh`: **[2.2]** 运行 PointNet 高级扩展实验（label smoothing + scale augment + feature transform + CSV 指标记录）
+- `package_final.sh`: 一键收集产物到 `final/` 并打包 `final_submission.zip`
 
 ## 建议使用顺序（Colab）
 
@@ -50,6 +51,12 @@ bash colab_final/train_dgcnn.sh
 bash colab_final/train_advanced.sh
 ```
 
+7. 一键打包提交文件（创建 `final/` 并生成压缩包）：
+
+```bash
+bash colab_final/package_final.sh
+```
+
 ---
 
 ## 训练输出文件位置（Output File Locations）
@@ -59,11 +66,17 @@ bash colab_final/train_advanced.sh
 | 脚本 | 产出文件路径 | 说明 |
 |------|-------------|------|
 | `train_baseline.sh` | `cls/cls_model_<epoch>.pth` | PointNet Baseline 每轮模型权重 |
-| `train_cross_dataset.sh` | `cls/cls_model_<epoch>.pth` | 跨数据集（ModelNet10）每轮模型权重（与 baseline 同目录） |
+| `train_cross_dataset.sh` | `cls_cross/cls_model_<epoch>.pth` | 跨数据集（ModelNet10）每轮模型权重（独立目录） |
+| `train_cross_dataset.sh` | `cls_cross/best_model.pth` | 跨数据集最优模型（按每轮 test_acc 自动更新） |
+| `train_cross_dataset.sh` | `cls_cross/metrics.csv` | 每轮 `epoch,train_loss,train_acc,test_loss,test_acc,lr` |
+| `train_cross_dataset.sh` | `cls_cross/loss.txt` / `cls_cross/accuracy.txt` | 每轮 loss/accuracy 文本记录 |
 | `train_dgcnn.sh` | `dgcnn/pytorch/checkpoints/dgcnn_test/models/model.t7` | DGCNN 最佳模型权重 |
 | `train_dgcnn.sh` | `dgcnn/pytorch/checkpoints/dgcnn_test/run.log` | DGCNN 训练日志 |
 | `train_advanced.sh` | `cls_advanced/cls_model_<epoch>.pth` | Advanced 每轮模型权重 |
-| `train_advanced.sh` | `cls_advanced/metrics.csv` | 每轮 `epoch,train_loss,train_acc,test_acc` 指标 |
+| `train_advanced.sh` | `cls_advanced/best_model.pth` | Advanced 最优模型（按每轮 test_acc 自动更新） |
+| `train_advanced.sh` | `cls_advanced/metrics.csv` | 每轮 `epoch,train_loss,train_acc,test_loss,test_acc,lr` 指标 |
+| `train_advanced.sh` | `cls_advanced/loss.txt` / `cls_advanced/accuracy.txt` | 每轮 loss/accuracy 文本记录 |
+| `train_advanced.sh` | `cls_advanced/meshlab_ply/*.ply` | 每轮导出的 MeshLab 点云样本（含预测/真值标签注释） |
 
 > **提示**：Colab 重启后文件会丢失，请及时通过 `files.download()` 或 Google Drive 保存以上文件。
 
@@ -134,18 +147,23 @@ PointNet 基线在 ModelNet40 上的分类精度受两方面限制：
 
 ### 改动内容（What Changed）
 
-在 `train_classification_h5.py` 中新增三个可选 CLI 标志，**默认值均与基线完全一致**，不破坏已有行为：
+在 `train_classification_h5.py` 中新增/扩展若干可选 CLI 标志，核心行为保持向后兼容：
 
 | 标志 | 类型 | 默认值 | 作用 |
 |------|------|--------|------|
-| `--label_smoothing` | float | `0.0` | 标签平滑系数；设为 `0.1` 时将正确类的目标概率从 1 降至 0.9，其余质量均匀分配到其他类，降低过拟合 |
+| `--label_smoothing` | float | `0.0` | 标签平滑系数；推荐从 `0.05` 起调参，降低过拟合风险 |
 | `--scale_augment` | 开关 | 关闭 | 训练时对每个点云随机缩放 ×[0.8, 1.25]，提升尺度鲁棒性 |
-| `--log_csv` | str | `""` | 指定 CSV 文件路径；若设置则每轮结束后执行完整测试集评估并写入 `epoch,train_loss,train_acc,test_acc` |
+| `--log_csv` | str | `""` | 指定 CSV 文件路径；若设置则每轮写入 `epoch,train_loss,train_acc,test_loss,test_acc,lr`，并同步生成 `loss.txt/accuracy.txt` |
+| `--meshlab_dir` | str | `""` | 指定目录后，每轮导出 MeshLab 可直接打开的 `.ply` 点云样本 |
+| `--meshlab_samples_per_epoch` | int | `0` | 每轮导出的测试样本数（与 `--meshlab_dir` 配合） |
+| `--weight_decay` | float | `0.0` | Adam 权重衰减，抑制过拟合 |
+| `--scheduler` | str | `step` | 学习率调度器，可选 `step/cosine/none` |
 
 具体实现要点：
 - `label_smoothing_loss()` 函数：当 `smoothing=0` 时等价于 `F.nll_loss`（向后兼容）；否则用平滑分布替代 one-hot 目标。
 - `ModelNetH5Dataset` 新增 `scale_augment` 参数，仅在 `data_augmentation=True` 时生效（测试集不受影响）。
-- CSV 记录在每 epoch 末尾追加一行，支持实时查看训练曲线。
+- 每个 epoch 末尾执行完整测试评估：保存 train/test loss、train/test acc、当前学习率，并自动更新 `best_model.pth`。
+- 开启 `--meshlab_dir` 后，每轮都会导出带预测/真值标签注释的 `.ply` 文件，便于直接在 MeshLab 可视化分析误分类。
 
 ### 如何运行（How to Run）
 
@@ -168,10 +186,15 @@ python colab_final/train_classification_h5.py \
   --nepoch 20 \
   --dataset_type modelnet40 \
   --feature_transform \
-  --label_smoothing 0.1 \
+  --label_smoothing 0.05 \
   --scale_augment \
+  --weight_decay 0.0001 \
+  --scheduler cosine \
+  --min_lr 0.00001 \
   --outf cls_advanced \
-  --log_csv cls_advanced/metrics.csv
+  --log_csv cls_advanced/metrics.csv \
+  --meshlab_dir cls_advanced/meshlab_ply \
+  --meshlab_samples_per_epoch 6
 ```
 
 ### 预期输出文件（Expected Output Files）
@@ -179,14 +202,18 @@ python colab_final/train_classification_h5.py \
 | 文件 | 说明 |
 |------|------|
 | `cls_advanced/cls_model_<epoch>.pth` | 每轮保存的模型权重 |
-| `cls_advanced/metrics.csv` | 每轮 `epoch,train_loss,train_acc,test_acc` |
+| `cls_advanced/best_model.pth` | 每轮评估后自动更新的最佳权重 |
+| `cls_advanced/metrics.csv` | 每轮 `epoch,train_loss,train_acc,test_loss,test_acc,lr` |
+| `cls_advanced/loss.txt` | 每轮 `epoch,train_loss,test_loss` |
+| `cls_advanced/accuracy.txt` | 每轮 `epoch,train_acc,test_acc` |
+| `cls_advanced/meshlab_ply/*.ply` | 每轮导出的 MeshLab 点云样本 |
 
 `metrics.csv` 示例：
 
 ```
-epoch,train_loss,train_acc,test_acc
-0,2.1234,0.4512,0.5031
-1,1.8765,0.5234,0.5612
+epoch,train_loss,train_acc,test_loss,test_acc,lr
+0,2.1234,0.4512,1.9988,0.5031,0.00080000
+1,1.8765,0.5234,1.7450,0.5612,0.00076121
 ...
 ```
 

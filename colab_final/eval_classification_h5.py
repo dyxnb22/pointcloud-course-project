@@ -48,7 +48,7 @@ def _infer_num_classes(state_dict):
     for key, value in state_dict.items():
         if key.endswith("fc3.bias") and hasattr(value, "shape") and len(value.shape) == 1:
             return int(value.shape[0])
-    raise ValueError("无法从权重中推断类别数（未找到 fc3.weight）。")
+    raise ValueError("无法从权重中推断类别数（未找到 fc3.weight 或 fc3.bias）。")
 
 
 def _infer_feature_transform(state_dict):

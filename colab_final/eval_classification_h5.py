@@ -5,6 +5,7 @@ import argparse
 import csv
 import json
 import os
+import pickle
 
 import numpy as np
 import torch
@@ -53,10 +54,13 @@ def _strip_module_prefix(state_dict):
 def _load_state_dict(model_path):
     try:
         ckpt = torch.load(model_path, map_location="cpu")
-    except Exception as exc:
+    except (pickle.UnpicklingError, RuntimeError) as exc:
         if "Weights only load failed" not in str(exc):
             raise
-        print("==> 警告：检测到旧版 checkpoint 格式，回退到 weights_only=False（请仅加载可信权重）")
+        print(
+            "==> Warning: legacy checkpoint format detected; retrying with "
+            "weights_only=False (load trusted checkpoints only)."
+        )
         ckpt = torch.load(model_path, map_location="cpu", weights_only=False)
     if _is_tensor_state_dict(ckpt):
         return _strip_module_prefix(ckpt)

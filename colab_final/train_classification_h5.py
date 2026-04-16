@@ -36,7 +36,7 @@ def write_ascii_ply(path, points_xyz, pred_name=None, gt_name=None):
     if pts.ndim != 2 or pts.shape[1] < 3:
         raise ValueError(f"Invalid points shape for PLY export: {pts.shape}")
     pts = pts[:, :3]
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write("ply\n")
         f.write("format ascii 1.0\n")

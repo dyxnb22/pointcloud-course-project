@@ -15,20 +15,29 @@ import torch.utils.data
 from pointnet.model import PointNetCls, feature_transform_regularizer
 from tqdm import tqdm
 
+DEFAULT_SCALE_MIN = 0.8
+DEFAULT_SCALE_MAX = 1.25
+SAFE_FILENAME_MAXLEN = 80
 
-def label_smoothing_loss(log_prob, target, num_classes, smoothing=0.0):
+
+def label_smoothing_loss(log_prob, target, num_classes, smoothing=0.0, reduction="mean"):
     if smoothing == 0.0 or num_classes <= 1:
-        return F.nll_loss(log_prob, target)
+        return F.nll_loss(log_prob, target, reduction=reduction)
     confidence = 1.0 - smoothing
     smooth_val = smoothing / max(1, num_classes - 1)
     with torch.no_grad():
         smooth_dist = torch.full_like(log_prob, smooth_val)
         smooth_dist.scatter_(1, target.unsqueeze(1), confidence)
-    return -(smooth_dist * log_prob).sum(dim=1).mean()
+    loss_per_sample = -(smooth_dist * log_prob).sum(dim=1)
+    if reduction == "sum":
+        return loss_per_sample.sum()
+    if reduction == "none":
+        return loss_per_sample
+    return loss_per_sample.mean()
 
 
 def _safe_name(text):
-    return re.sub(r"[^0-9A-Za-z_\-]+", "_", str(text))[:80]
+    return re.sub(r"[^0-9A-Za-z_\-]+", "_", str(text))[:SAFE_FILENAME_MAXLEN]
 
 
 def write_ascii_ply(path, points_xyz, pred_name=None, gt_name=None):
@@ -54,12 +63,23 @@ def write_ascii_ply(path, points_xyz, pred_name=None, gt_name=None):
 
 
 class ModelNetH5Dataset(torch.utils.data.Dataset):
-    def __init__(self, root, npoints=2500, split="trainval", data_augmentation=True, scale_augment=False):
+    def __init__(
+        self,
+        root,
+        npoints=2500,
+        split="trainval",
+        data_augmentation=True,
+        scale_augment=False,
+        scale_min=DEFAULT_SCALE_MIN,
+        scale_max=DEFAULT_SCALE_MAX,
+    ):
         self.root = root
         self.npoints = npoints
         self.split = split
         self.data_augmentation = data_augmentation
         self.scale_augment = scale_augment
+        self.scale_min = scale_min
+        self.scale_max = scale_max
 
         file_list = self._resolve_h5_list(split)
         data_chunks = []
@@ -159,7 +179,7 @@ class ModelNetH5Dataset(torch.utils.data.Dataset):
             points[:, [0, 2]] = points[:, [0, 2]].dot(rotation_matrix)
             points += np.random.normal(0, 0.02, size=points.shape)
             if self.scale_augment:
-                scale = np.random.uniform(0.8, 1.25)
+                scale = np.random.uniform(self.scale_min, self.scale_max)
                 points *= scale
 
         return torch.from_numpy(points.astype(np.float32)), torch.tensor(target, dtype=torch.long)
@@ -226,6 +246,25 @@ def evaluate_and_export(
     return avg_loss, acc
 
 
+def compute_training_loss(
+    pred,
+    target,
+    trans_feat,
+    num_classes,
+    label_smoothing,
+    use_feature_transform,
+    reduction,
+    include_regularizer=True,
+):
+    loss = label_smoothing_loss(
+        pred, target, num_classes, smoothing=label_smoothing, reduction=reduction
+    )
+    if use_feature_transform and include_regularizer:
+        reg = feature_transform_regularizer(trans_feat) * 0.001
+        loss = loss + reg
+    return loss
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--batchSize", type=int, default=32, help="input batch size")
@@ -246,6 +285,8 @@ def main():
         "--scale_augment", action="store_true", default=False,
         help="apply random scale augmentation [0.8, 1.25] during training",
     )
+    parser.add_argument("--scale_min", type=float, default=DEFAULT_SCALE_MIN, help="minimum random scale factor")
+    parser.add_argument("--scale_max", type=float, default=DEFAULT_SCALE_MAX, help="maximum random scale factor")
     parser.add_argument(
         "--log_csv", type=str, default="",
         help="if set, write per-epoch metrics to this CSV file",
@@ -273,6 +314,8 @@ def main():
 
     if opt.dataset_type != "modelnet40":
         raise ValueError("This wrapper supports only dataset_type=modelnet40 with HDF5 ModelNet data.")
+    if opt.scale_min <= 0 or opt.scale_max <= 0 or opt.scale_min >= opt.scale_max:
+        raise ValueError("--scale_min/--scale_max must satisfy 0 < scale_min < scale_max.")
 
     opt.manualSeed = random.randint(1, 10000)
     print("Random Seed: ", opt.manualSeed)
@@ -283,6 +326,8 @@ def main():
     dataset = ModelNetH5Dataset(
         root=opt.dataset, npoints=opt.num_points, split="trainval",
         scale_augment=opt.scale_augment,
+        scale_min=opt.scale_min,
+        scale_max=opt.scale_max,
     )
     test_dataset = ModelNetH5Dataset(
         root=opt.dataset,
@@ -364,15 +409,32 @@ def main():
             optimizer.zero_grad()
             classifier = classifier.train()
             pred, trans, trans_feat = classifier(points)
-            loss = label_smoothing_loss(pred, target, num_classes, smoothing=opt.label_smoothing)
-            if opt.feature_transform:
-                loss += feature_transform_regularizer(trans_feat) * 0.001
+            loss = compute_training_loss(
+                pred,
+                target,
+                trans_feat,
+                num_classes,
+                opt.label_smoothing,
+                opt.feature_transform,
+                reduction="mean",
+            )
             loss.backward()
             optimizer.step()
 
             pred_choice = pred.data.max(1)[1]
             correct = pred_choice.eq(target.data).sum().item()
-            epoch_loss_sum += loss.item()
+            with torch.no_grad():
+                batch_loss_sum = compute_training_loss(
+                    pred.detach(),
+                    target,
+                    trans_feat.detach() if trans_feat is not None else None,
+                    num_classes,
+                    opt.label_smoothing,
+                    opt.feature_transform,
+                    reduction="sum",
+                    include_regularizer=False,
+                )
+            epoch_loss_sum += batch_loss_sum.item()
             epoch_correct += correct
             epoch_total += points.size(0)
             print(
@@ -407,8 +469,10 @@ def main():
 
         torch.save(classifier.state_dict(), "%s/cls_model_%d.pth" % (opt.outf, epoch))
 
-        train_loss_avg = epoch_loss_sum / num_batch
-        train_acc = epoch_correct / max(1, epoch_total)
+        if epoch_total == 0:
+            raise RuntimeError(f"No training samples were processed in epoch {epoch}.")
+        train_loss_avg = epoch_loss_sum / epoch_total
+        train_acc = epoch_correct / epoch_total
         test_loss_avg, test_acc = evaluate_and_export(
             classifier,
             testdataloader,

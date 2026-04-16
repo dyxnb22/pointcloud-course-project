@@ -75,11 +75,11 @@
 
 | 方法 | 数据集 | 最终测试精度 | 说明 |
 | --- | --- | ---: | --- |
-| PointNet Baseline | ModelNet40 | 76.9% | 20 epoch 下后期有回落（best=80.5%） |
-| PointNet Baseline | ModelNet10 | 81.6% | 跨数据集有一定泛化能力（best=86.6%） |
-| PointNet Advanced | ModelNet10 | 88.0% | 相比 Baseline final 提升 +6.4pp |
+| PointNet Baseline | ModelNet40 | 76.9% | 20 epoch 下后期有回落 (best=80.5%) |
+| PointNet Baseline | ModelNet10 | 81.6% | 跨数据集有一定泛化能力 (best=86.6%) |
+| PointNet Advanced | ModelNet10 | 88.0% | 相比 Baseline 最终提升 +6.4pp |
 | DGCNN | ModelNet40 | 84.7% | 整体优于 PointNet，体现局部结构建模优势 |
-| PointNet Advanced (2.2) | ModelNet40 | 80.8% | 相比 Baseline final 提升 +3.9pp |
+| PointNet Advanced (2.2) | ModelNet40 | 80.8% | 相比 Baseline 最终提升 +3.9pp |
 
 ### 4.2 训练曲线对比
 

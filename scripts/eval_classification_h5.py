@@ -15,6 +15,29 @@ from pointnet.model import PointNetCls
 from train_classification_h5 import ModelNetH5Dataset
 
 
+def _resolve_existing_path(path, script_dir):
+    """Resolve a potentially relative path from common execution locations.
+
+    Resolution order:
+    1) current working directory
+    2) script directory
+    3) repository root relative to script directory (../)
+    """
+    if os.path.isabs(path):
+        return path
+    candidates = [
+        os.path.abspath(path),
+        os.path.abspath(os.path.join(script_dir, path)),
+        os.path.abspath(os.path.join(script_dir, "..", path)),
+    ]
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+    raise FileNotFoundError(
+        f"路径不存在: {path}。已尝试: {', '.join(candidates)}"
+    )
+
+
 def _is_tensor_state_dict(candidate):
     return isinstance(candidate, dict) and bool(candidate) and all(
         torch.is_tensor(v) for v in candidate.values()
@@ -112,6 +135,11 @@ def main():
     parser.add_argument("--num_points", type=int, default=2500, help="number of input points")
     parser.add_argument("--workers", type=int, default=4, help="number of data loading workers")
     args = parser.parse_args()
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    args.dataset = _resolve_existing_path(args.dataset, script_dir)
+    args.model = _resolve_existing_path(args.model, script_dir)
+    if not os.path.isabs(args.out_dir):
+        args.out_dir = os.path.abspath(args.out_dir)
 
     os.makedirs(args.out_dir, exist_ok=True)
 

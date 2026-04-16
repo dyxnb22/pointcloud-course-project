@@ -51,7 +51,10 @@ def _strip_module_prefix(state_dict):
 
 
 def _load_state_dict(model_path):
-    ckpt = torch.load(model_path, map_location="cpu")
+    try:
+        ckpt = torch.load(model_path, map_location="cpu", weights_only=False)
+    except TypeError:
+        ckpt = torch.load(model_path, map_location="cpu")
     if _is_tensor_state_dict(ckpt):
         return _strip_module_prefix(ckpt)
     if isinstance(ckpt, dict):

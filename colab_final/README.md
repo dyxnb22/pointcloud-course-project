@@ -57,6 +57,8 @@ bash colab_final/train_advanced.sh
 bash colab_final/package_final.sh
 ```
 
+> 打包脚本会尝试自动运行 `plot_compare.py`（输入 `cls/metrics.csv` 与 `cls_advanced/metrics.csv`）生成 3 张独立图片：`curve_compare_loss.png`、`curve_compare_accuracy.png`、`curve_compare_lr.png`，并一起放入 `final_submission.zip`。
+
 ---
 
 ## 训练输出文件位置（Output File Locations）
@@ -95,7 +97,9 @@ bash colab_final/package_final.sh
 
 ### 训练曲线对比（Baseline vs Advanced）
 
-![curve_compare](curve_compare.png)
+![curve_compare_loss](curve_compare_loss.png)
+![curve_compare_accuracy](curve_compare_accuracy.png)
+![curve_compare_lr](curve_compare_lr.png)
 
 
 

@@ -4,6 +4,10 @@ set -euo pipefail
 
 FINAL_DIR="final"
 ZIP_PATH="final_submission.zip"
+COMPARE_OUT_BASENAME="curve_compare.png"
+COMPARE_LOSS_PNG="curve_compare_loss.png"
+COMPARE_ACC_PNG="curve_compare_accuracy.png"
+COMPARE_LR_PNG="curve_compare_lr.png"
 
 rm -rf "${FINAL_DIR}" "${ZIP_PATH}"
 mkdir -p "${FINAL_DIR}"
@@ -20,6 +24,38 @@ copy_if_exists() {
   fi
 }
 
+generate_compare_plot() {
+  local plot_script=""
+  local baseline_csv="cls/metrics.csv"
+  local advanced_csv="cls_advanced/metrics.csv"
+
+  if [ -f "colab_final/plot_compare.py" ]; then
+    plot_script="colab_final/plot_compare.py"
+  elif [ -f "plot_compare.py" ]; then
+    plot_script="plot_compare.py"
+  fi
+
+  if [ -z "${plot_script}" ]; then
+    echo "[WARN] 未找到对比绘图脚本 plot_compare.py"
+    return 0
+  fi
+
+  if [ ! -f "${baseline_csv}" ] || [ ! -f "${advanced_csv}" ]; then
+    echo "[WARN] 未找到对比绘图所需 metrics.csv，跳过生成对比图"
+    return 0
+  fi
+
+  echo "==> 生成对比图（3 张）"
+  if MPLBACKEND=Agg python3 "${plot_script}" \
+    --baseline "${baseline_csv}" \
+    --advanced "${advanced_csv}" \
+    --out "${COMPARE_OUT_BASENAME}"; then
+    echo "[OK] 已生成: ${COMPARE_LOSS_PNG}, ${COMPARE_ACC_PNG}, ${COMPARE_LR_PNG}"
+  else
+    echo "[WARN] 对比图生成失败，继续打包"
+  fi
+}
+
 # PointNet 产物目录（课程常用）
 copy_if_exists "cls" "${FINAL_DIR}/cls"
 copy_if_exists "cls_cross" "${FINAL_DIR}/cls_cross"
@@ -33,6 +69,12 @@ copy_if_exists "assets/meshlab" "${FINAL_DIR}/assets/meshlab"
 copy_if_exists "results" "${FINAL_DIR}/results"
 copy_if_exists "README.md" "${FINAL_DIR}/README.md"
 copy_if_exists "colab_final/README.md" "${FINAL_DIR}/colab_final_README.md"
+
+# 训练曲线对比图（若可生成则一并打包）
+generate_compare_plot
+copy_if_exists "${COMPARE_LOSS_PNG}" "${FINAL_DIR}/${COMPARE_LOSS_PNG}"
+copy_if_exists "${COMPARE_ACC_PNG}" "${FINAL_DIR}/${COMPARE_ACC_PNG}"
+copy_if_exists "${COMPARE_LR_PNG}" "${FINAL_DIR}/${COMPARE_LR_PNG}"
 
 # 生成清单
 MANIFEST="${FINAL_DIR}/MANIFEST.txt"

@@ -16,6 +16,13 @@ from train_classification_h5 import ModelNetH5Dataset
 
 
 def _resolve_existing_path(path, script_dir):
+    """Resolve a potentially relative path from common execution locations.
+
+    Resolution order:
+    1) current working directory
+    2) script directory
+    3) repository root relative to script directory (../)
+    """
     if os.path.isabs(path):
         return path
     candidates = [
@@ -26,7 +33,9 @@ def _resolve_existing_path(path, script_dir):
     for candidate in candidates:
         if os.path.exists(candidate):
             return candidate
-    return candidates[0]
+    raise FileNotFoundError(
+        f"路径不存在: {path}。已尝试: {', '.join(candidates)}"
+    )
 
 
 def _is_tensor_state_dict(candidate):

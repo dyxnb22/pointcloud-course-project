@@ -110,6 +110,7 @@ bash colab_final/package_final.sh
 | ----------------------- | -------------------------- | ------------ | ------------ | -------- |
 | PointNet Baseline       | ModelNet40                 | 76.9%        | 89.2%        | 低于论文 12.3pp；20 epoch 下后期有回落（best=80.5%，final=76.9%） |
 | PointNet Baseline       | ModelNet10 (cross-dataset) | 81.6%        | —            | 跨数据集有一定泛化能力；best=86.6%，但后期同样出现回落 |
+| PointNet Advanced       | ModelNet10 (cross-dataset) | 88.0%        | —            | 相对 Baseline final 提升 +6.4pp（88.0% vs 81.6%）；best=88.0% |
 | DGCNN                   | ModelNet40                 | 84.7%        | 92.9%        | 低于论文 8.2pp；整体优于 PointNet 系列，体现局部结构建模优势 |
 | PointNet Advanced (2.2) | ModelNet40                 | 80.8%        | —            | 相对 Baseline final 提升 +3.9pp（80.8% vs 76.9%），训练更平稳 |
 
@@ -118,6 +119,14 @@ bash colab_final/package_final.sh
 ![curve_compare_loss](../results/final/curve_compare_loss.png)
 ![curve_compare_accuracy](../results/final/curve_compare_accuracy.png)
 ![curve_compare_lr](../results/final/curve_compare_lr.png)
+
+### 训练曲线对比（ModelNet10 Baseline vs Advanced）
+
+![curve_compare_modelnet10_loss](../modelnet10_compare/curve_compare_modelnet10_loss.png)
+![curve_compare_modelnet10_accuracy](../modelnet10_compare/curve_compare_modelnet10_accuracy.png)
+![curve_compare_modelnet10_lr](../modelnet10_compare/curve_compare_modelnet10_lr.png)
+
+ModelNet10 上，Baseline 最终 81.6% / best 86.6%，Advanced 最终 88.0% / best 88.0%。
 
 
 
@@ -153,6 +162,10 @@ PointNet 的主要局限：
 在 ModelNet40 上，Advanced (2.2) 相比 Baseline 的结果为：  
 - **最终精度**：80.8% vs 76.9%，提升 **+3.9pp**；  
 - **最佳精度**：80.8% vs 80.5%，提升 **+0.3pp**。  
+
+在 ModelNet10 上，Advanced（cross-dataset）相比 Baseline 的结果为：  
+- **最终精度**：88.0% vs 81.6%，提升 **+6.4pp**；  
+- **最佳精度**：88.0% vs 86.6%，提升 **+1.4pp**。  
 
 分项理解如下：  
 1) **label smoothing**：降低过度自信，通常可缓解过拟合并提升泛化稳定性；  

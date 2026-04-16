@@ -35,7 +35,8 @@ def _load_state_dict(model_path):
         for key in ("state_dict", "model_state_dict", "model"):
             if key in ckpt and _is_tensor_state_dict(ckpt[key]):
                 return _strip_module_prefix(ckpt[key])
-        for value in ckpt.values():
+        for key in sorted(ckpt.keys()):
+            value = ckpt[key]
             if _is_tensor_state_dict(value):
                 return _strip_module_prefix(value)
     raise ValueError(f"无法从权重文件中解析有效 state_dict: {model_path}")
@@ -63,7 +64,7 @@ def _maybe_remap_labels(dataset, num_classes):
     max_label = int(labels.max())
     if min_label < 0:
         raise ValueError(f"检测到负标签值: min_label={min_label}")
-    if max_label < num_classes:
+    if max_label <= (num_classes - 1):
         return False
 
     unique_labels = sorted(np.unique(labels).tolist())
@@ -78,8 +79,8 @@ def _maybe_remap_labels(dataset, num_classes):
     dataset.label = remapped
     if hasattr(dataset, "classes") and isinstance(dataset.classes, list) and dataset.classes:
         dataset.classes = [
-            dataset.classes[idx] if 0 <= idx < len(dataset.classes) else str(idx)
-            for idx in unique_labels
+            dataset.classes[old_idx] if 0 <= old_idx < len(dataset.classes) else str(old_idx)
+            for _, old_idx in enumerate(unique_labels)
         ]
     return True
 

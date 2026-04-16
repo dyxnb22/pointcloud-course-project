@@ -80,7 +80,7 @@ def _maybe_remap_labels(dataset, num_classes):
     if hasattr(dataset, "classes") and isinstance(dataset.classes, list) and dataset.classes:
         dataset.classes = [
             dataset.classes[old_idx] if 0 <= old_idx < len(dataset.classes) else str(old_idx)
-            for _, old_idx in enumerate(unique_labels)
+            for old_idx in unique_labels
         ]
     return True
 

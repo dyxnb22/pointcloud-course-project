@@ -5,6 +5,9 @@ set -euo pipefail
 FINAL_DIR="final"
 ZIP_PATH="final_submission.zip"
 COMPARE_PNG="curve_compare.png"
+COMPARE_LOSS_PNG="curve_compare_loss.png"
+COMPARE_ACC_PNG="curve_compare_accuracy.png"
+COMPARE_LR_PNG="curve_compare_lr.png"
 
 rm -rf "${FINAL_DIR}" "${ZIP_PATH}"
 mkdir -p "${FINAL_DIR}"
@@ -38,16 +41,16 @@ generate_compare_plot() {
   fi
 
   if [ ! -f "${baseline_csv}" ] || [ ! -f "${advanced_csv}" ]; then
-    echo "[WARN] 未找到对比绘图所需 metrics.csv，跳过生成 ${COMPARE_PNG}"
+    echo "[WARN] 未找到对比绘图所需 metrics.csv，跳过生成对比图"
     return 0
   fi
 
-  echo "==> 生成对比图 ${COMPARE_PNG}"
+  echo "==> 生成对比图（3 张）"
   if MPLBACKEND=Agg python3 "${plot_script}" \
     --baseline "${baseline_csv}" \
     --advanced "${advanced_csv}" \
     --out "${COMPARE_PNG}"; then
-    echo "[OK] 已生成: ${COMPARE_PNG}"
+    echo "[OK] 已生成: ${COMPARE_LOSS_PNG}, ${COMPARE_ACC_PNG}, ${COMPARE_LR_PNG}"
   else
     echo "[WARN] 对比图生成失败，继续打包"
   fi
@@ -69,7 +72,9 @@ copy_if_exists "colab_final/README.md" "${FINAL_DIR}/colab_final_README.md"
 
 # 训练曲线对比图（若可生成则一并打包）
 generate_compare_plot
-copy_if_exists "${COMPARE_PNG}" "${FINAL_DIR}/${COMPARE_PNG}"
+copy_if_exists "${COMPARE_LOSS_PNG}" "${FINAL_DIR}/${COMPARE_LOSS_PNG}"
+copy_if_exists "${COMPARE_ACC_PNG}" "${FINAL_DIR}/${COMPARE_ACC_PNG}"
+copy_if_exists "${COMPARE_LR_PNG}" "${FINAL_DIR}/${COMPARE_LR_PNG}"
 
 # 生成清单
 MANIFEST="${FINAL_DIR}/MANIFEST.txt"

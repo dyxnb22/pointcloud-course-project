@@ -171,7 +171,7 @@ bash scripts/train_dgcnn.sh
 bash scripts/package_final.sh
 ```
 
-> 脚本会尝试自动运行 `colab_final/plot_compare.py` 生成单独图片 `curve_compare.png`（需存在 `cls/metrics.csv` 与 `cls_advanced/metrics.csv`），并将该图片一并打包。
+> 脚本会尝试自动运行 `colab_final/plot_compare.py` 生成 3 张独立图片：`curve_compare_loss.png`、`curve_compare_accuracy.png`、`curve_compare_lr.png`（需存在 `cls/metrics.csv` 与 `cls_advanced/metrics.csv`），并将这些图片一并打包。
 
 会在当前仓库根目录生成：
 

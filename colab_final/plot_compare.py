@@ -97,11 +97,23 @@ def summarize(df: pd.DataFrame, name: str):
     print(f"  final lr        : {final_lr:.8f}")
 
 
+def build_output_paths(out_path: str):
+    root, ext = os.path.splitext(out_path)
+    if not ext:
+        ext = ".png"
+        root = out_path
+    return {
+        "loss": f"{root}_loss{ext}",
+        "accuracy": f"{root}_accuracy{ext}",
+        "lr": f"{root}_lr{ext}",
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", default="cls/metrics.csv", help="baseline metrics.csv 路径")
     parser.add_argument("--advanced", default="cls_advanced/metrics.csv", help="advanced metrics.csv 路径")
-    parser.add_argument("--out", default="curve_compare.png", help="输出图片路径")
+    parser.add_argument("--out", default="curve_compare.png", help="输出图片前缀（会生成 *_loss/*_accuracy/*_lr）")
     parser.add_argument("--title", default="Training Curves: Baseline vs Advanced", help="总标题")
     parser.add_argument("--dpi", type=int, default=220, help="保存图片 DPI")
     args = parser.parse_args()
@@ -118,11 +130,10 @@ def main():
     summarize(a, "Advanced")
     print(f"\nΔ best test_acc (Advanced - Baseline): {a['test_acc'].max() - b['test_acc'].max():+.4f}")
 
-    # 画图
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    outputs = build_output_paths(args.out)
 
-    # Loss
-    ax = axes[0]
+    # Loss 图
+    fig, ax = plt.subplots(figsize=(6.5, 5))
     ax.plot(b["epoch"], b["train_loss"], label="Baseline train_loss", linewidth=2)
     ax.plot(a["epoch"], a["train_loss"], label="Advanced train_loss", linewidth=2)
     ax.plot(b["epoch"], b["test_loss"], "--", label="Baseline test_loss", linewidth=1.8)
@@ -132,9 +143,12 @@ def main():
     ax.set_title("Loss Curve")
     ax.grid(alpha=0.3)
     ax.legend()
+    fig.tight_layout()
+    fig.savefig(outputs["loss"], dpi=args.dpi)
+    plt.close(fig)
 
-    # Accuracy
-    ax = axes[1]
+    # Accuracy 图
+    fig, ax = plt.subplots(figsize=(6.5, 5))
     ax.plot(b["epoch"], b["train_acc"], label="Baseline train_acc", linewidth=2)
     ax.plot(b["epoch"], b["test_acc"], "--", label="Baseline test_acc", linewidth=1.8)
     ax.plot(a["epoch"], a["train_acc"], label="Advanced train_acc", linewidth=2)
@@ -144,9 +158,12 @@ def main():
     ax.set_title("Accuracy Curve")
     ax.grid(alpha=0.3)
     ax.legend()
+    fig.tight_layout()
+    fig.savefig(outputs["accuracy"], dpi=args.dpi)
+    plt.close(fig)
 
-    # LR
-    ax = axes[2]
+    # LR 图
+    fig, ax = plt.subplots(figsize=(6.5, 5))
     ax.plot(b["epoch"], b["lr"], label="Baseline lr", linewidth=2)
     ax.plot(a["epoch"], a["lr"], label="Advanced lr", linewidth=2)
     ax.set_xlabel("Epoch")
@@ -154,13 +171,14 @@ def main():
     ax.set_title("LR Curve")
     ax.grid(alpha=0.3)
     ax.legend()
-
-    fig.suptitle(args.title, fontsize=14)
     fig.tight_layout()
-    fig.subplots_adjust(top=0.87)
-    fig.savefig(args.out, dpi=args.dpi)
-    print(f"\n✅ 已保存对比图: {args.out}")
-    plt.show()
+    fig.savefig(outputs["lr"], dpi=args.dpi)
+    plt.close(fig)
+
+    print("\n✅ 已保存对比图:")
+    print(f"  - {outputs['loss']}")
+    print(f"  - {outputs['accuracy']}")
+    print(f"  - {outputs['lr']}")
 
 
 if __name__ == "__main__":

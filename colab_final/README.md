@@ -57,6 +57,8 @@ bash colab_final/train_advanced.sh
 bash colab_final/package_final.sh
 ```
 
+> 打包脚本会尝试自动运行 `plot_compare.py`（输入 `cls/metrics.csv` 与 `cls_advanced/metrics.csv`）生成单独图片 `curve_compare.png`，并一起放入 `final_submission.zip`。
+
 ---
 
 ## 训练输出文件位置（Output File Locations）

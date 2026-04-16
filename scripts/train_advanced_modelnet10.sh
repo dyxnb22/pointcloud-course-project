@@ -21,12 +21,13 @@ fi
 
 OUTPUT_DIR="cls_cross_advanced"
 CSV_PATH="${OUTPUT_DIR}/metrics.csv"
+DATASET_TYPE="modelnet40" # HDF5 训练入口仅支持 modelnet40 分支，ModelNet10 子集同样使用该分支
 
 echo "==> 开始训练 PointNet Advanced（ModelNet10 子集，label smoothing + scale augment + feature transform）..."
 python "${TRAIN_SCRIPT}" \
   --dataset "${DATASET_PATH}" \
   --nepoch=20 \
-  --dataset_type modelnet40 \
+  --dataset_type "${DATASET_TYPE}" \
   --feature_transform \
   --label_smoothing 0.05 \
   --scale_augment \

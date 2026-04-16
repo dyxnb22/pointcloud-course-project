@@ -136,6 +136,16 @@ def evaluate(model, dataloader, device):
     return total_loss / total_samples, total_correct / total_samples, total_samples
 
 
+def _build_dataloader(dataset, batch_size, workers):
+    workers = max(0, int(workers))
+    return torch.utils.data.DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=workers,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Evaluate pretrained PointNet on HDF5 ModelNet dataset.")
     parser.add_argument("--dataset", required=True, help="dataset path, e.g. pointnet.pytorch/data/modelnet10_ply_hdf5_2048")
@@ -143,7 +153,7 @@ def main():
     parser.add_argument("--out_dir", required=True, help="output directory")
     parser.add_argument("--batchSize", type=int, default=32, help="input batch size")
     parser.add_argument("--num_points", type=int, default=2500, help="number of input points")
-    parser.add_argument("--workers", type=int, default=4, help="number of data loading workers")
+    parser.add_argument("--workers", type=int, default=0, help="number of data loading workers")
     args = parser.parse_args()
     script_dir = os.path.dirname(os.path.abspath(__file__))
     args.dataset = _resolve_existing_path(args.dataset, script_dir)
@@ -159,11 +169,10 @@ def main():
         npoints=args.num_points,
         data_augmentation=False,
     )
-    test_dataloader = torch.utils.data.DataLoader(
+    test_dataloader = _build_dataloader(
         test_dataset,
         batch_size=args.batchSize,
-        shuffle=False,
-        num_workers=int(args.workers),
+        workers=args.workers,
     )
 
     state_dict = _load_state_dict(args.model)
@@ -177,7 +186,24 @@ def main():
     classifier = PointNetCls(k=num_classes, feature_transform=feature_transform).to(device)
     classifier.load_state_dict(state_dict, strict=True)
 
-    test_loss, test_acc, test_samples = evaluate(classifier, test_dataloader, device)
+    try:
+        test_loss, test_acc, test_samples = evaluate(classifier, test_dataloader, device)
+    except RuntimeError as exc:
+        err_msg = str(exc).lower()
+        should_retry = int(args.workers) > 0 and (
+            "dataloader worker" in err_msg
+            or "bus error" in err_msg
+            or "shared memory" in err_msg
+        )
+        if not should_retry:
+            raise
+        print("==> Warning: DataLoader 多进程加载失败，自动回退到 --workers=0 重试。")
+        test_dataloader = _build_dataloader(
+            test_dataset,
+            batch_size=args.batchSize,
+            workers=0,
+        )
+        test_loss, test_acc, test_samples = evaluate(classifier, test_dataloader, device)
 
     metrics_path = os.path.join(args.out_dir, "metrics.csv")
     with open(metrics_path, "w", newline="", encoding="utf-8") as f:

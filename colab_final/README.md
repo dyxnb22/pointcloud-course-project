@@ -88,12 +88,12 @@ bash colab_final/package_final.sh
 
 ### 精度汇总
 
-| 方法                    | 数据集                     | 最终测试精度 | 论文报告精度 | 差距分析                 |
-| ----------------------- | -------------------------- | ------------ | ------------ | ------------------------ |
-| PointNet Baseline       | ModelNet40                 | 74.9%        | 89.2%        | （填：偏高/偏低，原因）  |
-| PointNet Baseline       | ModelNet10 (cross-dataset) | 82.7%        | —            | （填：泛化表现说明）     |
-| DGCNN                   | ModelNet40                 | 84.7%        | 92.9%        | （填：偏高/偏低，原因）  |
-| PointNet Advanced (2.2) | ModelNet40                 | 77.6%        | —            | （填：与 baseline 对比） |
+| 方法                    | 数据集                     | 最终测试精度 | 论文报告精度 | 差距分析 |
+| ----------------------- | -------------------------- | ------------ | ------------ | -------- |
+| PointNet Baseline       | ModelNet40                 | 76.9%        | 89.2%        | 低于论文 12.3pp；20 epoch 下后期有回落（best=80.5%，final=76.9%） |
+| PointNet Baseline       | ModelNet10 (cross-dataset) | 81.6%        | —            | 跨数据集有一定泛化能力；best=86.6%，但后期同样出现回落 |
+| DGCNN                   | ModelNet40                 | 84.7%        | 92.9%        | 低于论文 8.2pp；整体优于 PointNet 系列，体现局部结构建模优势 |
+| PointNet Advanced (2.2) | ModelNet40                 | 80.8%        | —            | 相对 Baseline final 提升 +3.9pp（80.8% vs 76.9%），训练更平稳 |
 
 ### 训练曲线对比（Baseline vs Advanced）
 
@@ -105,18 +105,43 @@ bash colab_final/package_final.sh
 
 ### 论文结果对比分析
 
-（填：你的结果与论文数值的差距，以及可能原因，如 epoch 数、数据增强、硬件差异等）
+本次复现实验中，PointNet Baseline（ModelNet40）最终 76.9%，相对论文 89.2% 低 12.3pp；DGCNN 最终 84.7%，相对论文 92.9% 低 8.2pp。  
+造成差距的主要原因可能包括：  
+1) 训练轮数较少（当前主要为 20 epoch），尚未充分收敛；  
+2) 增强策略与论文/官方实现不完全一致（参数范围、采样细节、正则化强度）；  
+3) 优化配置差异（学习率调度、weight decay、batch size）会直接影响最终上限；  
+4) 运行环境差异（Colab GPU 类型、随机种子、I/O 及并行配置）会带来一定波动。  
+从结果看，DGCNN 与论文差距小于 PointNet，说明其在本实验设置下对局部几何结构的利用更充分。
 
 ### 失败案例与方法局限性分析
 
-（填：至少列出 2–3 类容易分类错误的点云类别，分析原因；
- 说明 PointNet 的主要局限，如局部结构捕捉不足、尺度敏感等；
- 提出可能的改进方向）
+结合 `cls_advanced/meshlab_ply` 的导出样本命名，可观察到以下易错对：  
+1) `night_stand` ↔ `dresser` / `mantel`：都属于家具类，整体轮廓近似，点云稀疏时边缘细节不足；  
+2) `bed` ↔ `sofa` / `tv_stand` / `guitar`：视角变化或部分遮挡时，全局形状判别性下降；  
+3) `bookshelf` ↔ `toilet` / `monitor` / `curtain`：局部结构缺失会导致全局特征被少量高响应点主导。  
+
+PointNet 的主要局限：  
+- 以全局汇聚为主，局部邻域关系建模较弱；  
+- 对尺度/密度变化敏感，数据分布偏移时稳定性下降；  
+- 后期训练易出现“训练精度继续上升、测试精度回落”的过拟合现象。  
+
+可行改进方向：  
+- 引入层次化局部建模（如 PointNet++）或图卷积（如 DGCNN）；  
+- 增强数据增强策略（缩放、随机丢点、CutMix/Mixup for point cloud）；  
+- 更系统地调参与早停（cosine 调度、weight decay、best checkpoint 选择）。
 
 ### Advanced 2.2 改进效果分析
 
-（填：label smoothing + scale augment + feature transform 带来了多少精度提升？
- 分析每项改动的贡献，是否符合预期，原因是什么）
+在 ModelNet40 上，Advanced (2.2) 相比 Baseline 的结果为：  
+- **最终精度**：80.8% vs 76.9%，提升 **+3.9pp**；  
+- **最佳精度**：80.8% vs 80.5%，提升 **+0.3pp**。  
+
+分项理解如下：  
+1) **label smoothing**：降低过度自信，通常可缓解过拟合并提升泛化稳定性；  
+2) **scale augment**：增强尺度鲁棒性，提升对不同采样尺度样本的一致性；  
+3) **feature transform**：对齐输入特征空间，提升表示质量但会增加训练复杂度。  
+
+整体上，改进方向符合预期：最终精度和后期稳定性均优于 Baseline；但在 20 epoch 配置下对“最佳点”提升有限，说明仍需更长训练和更细调参来释放全部潜力。
 
 ## 完成项清单（Submission Checklist）
 

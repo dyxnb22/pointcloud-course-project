@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# package_modelnet10_compare.sh - 收集 ModelNet10 Baseline vs Advanced 结果并打包
+# package_modelnet10_compare.sh - Collect ModelNet10 Baseline vs Advanced outputs and package them
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,9 +22,9 @@ copy_if_exists() {
   if [ -e "${src}" ]; then
     mkdir -p "$(dirname "${dst}")"
     cp -r "${src}" "${dst}"
-    echo "[OK] 已收集: ${src} -> ${dst}"
+    echo "[OK] Collected: ${src} -> ${dst}"
   else
-    echo "[WARN] 未找到: ${src}"
+    echo "[WARN] Not found: ${src}"
   fi
 }
 
@@ -34,24 +34,24 @@ generate_compare_plot() {
   local advanced_csv="cls_cross_advanced/metrics.csv"
 
   if [ ! -f "${plot_script}" ]; then
-    echo "[WARN] 未找到对比绘图脚本: ${plot_script}"
+    echo "[WARN] Compare plotting script not found: ${plot_script}"
     return 0
   fi
 
   if [ ! -f "${baseline_csv}" ] || [ ! -f "${advanced_csv}" ]; then
-    echo "[WARN] 未找到对比绘图所需 metrics.csv，跳过生成对比图"
+    echo "[WARN] Required metrics.csv files for compare plot not found, skipping"
     return 0
   fi
 
-  echo "==> 生成 ModelNet10 对比图（3 张）"
+  echo "==> Generating ModelNet10 comparison plots (3 images)"
   if MPLBACKEND=Agg python3 "${plot_script}" \
     --baseline "${baseline_csv}" \
     --advanced "${advanced_csv}" \
     --out "${COMPARE_OUT_BASENAME}" \
     --title "ModelNet10 Curves: Baseline vs Advanced"; then
-    echo "[OK] 已生成: ${COMPARE_LOSS_PNG}, ${COMPARE_ACC_PNG}, ${COMPARE_LR_PNG}"
+    echo "[OK] Generated: ${COMPARE_LOSS_PNG}, ${COMPARE_ACC_PNG}, ${COMPARE_LR_PNG}"
   else
-    echo "[WARN] 对比图生成失败，继续打包"
+    echo "[WARN] Compare plot generation failed, continuing packaging"
   fi
 }
 
@@ -68,11 +68,11 @@ MANIFEST="${OUTPUT_DIR}/MANIFEST.txt"
   (cd "${OUTPUT_DIR}" && find . -mindepth 1 | sort)
 } > "${MANIFEST}"
 
-echo "==> 开始打包 ${ZIP_PATH}"
+echo "==> Packaging ${ZIP_PATH}"
 zip -r "${ZIP_PATH}" "${OUTPUT_DIR}" 1>/dev/null
 
 echo ""
-echo "打包完成：${REPO_ROOT}/${ZIP_PATH}"
-echo "可在 Colab 使用以下代码下载："
+echo "Packaging complete: ${REPO_ROOT}/${ZIP_PATH}"
+echo "Use the following in Colab to download:"
 echo "from google.colab import files"
 echo "files.download('${ZIP_PATH}')"

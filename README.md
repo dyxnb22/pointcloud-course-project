@@ -1,44 +1,44 @@
-# Point Cloud Course Project（PointNet vs DGCNN）
+# Point Cloud Course Project (PointNet vs DGCNN)
 
-本仓库用于完成课程项目的**两阶段任务**：
+This repository is used for a **two-stage course project**:
 
-- **第一阶段（Google Colab）**：环境搭建、Baseline 训练、进阶修改（数据增强 + SE-Attention）、SOTA 对比（DGCNN）
-- **第二阶段（报告与展示）**：收集日志、整理结果表、MeshLab 可视化与误分类分析
+- **Stage 1 (Google Colab)**: environment setup, baseline training, advanced modifications (data augmentation + SE-Attention), and SOTA comparison (DGCNN)
+- **Stage 2 (Report & Presentation)**: collect logs, organize comparison tables, MeshLab visualization, and misclassification analysis
 
 ---
 
-## 仓库结构
+## Repository Structure
 
 ```
 pointcloud-course-project/
 ├── README.md
 ├── .gitignore
 ├── requirements.txt
-├── colab_final/        # Colab 最终运行代码集中目录（提交入口）
-├── notebooks/          # Google Colab 笔记本
-├── scripts/            # 一键运行脚本
+├── colab_final/        # Consolidated Colab final-run code (submission entry)
+├── notebooks/          # Google Colab notebooks
+├── scripts/            # One-command scripts
 │   ├── colab_setup.sh
 │   ├── train_baseline.sh
 │   ├── train_cross_dataset.sh
 │   ├── train_dgcnn.sh
 │   └── package_final.sh
-├── experiments/        # 各阶段实验记录
+├── experiments/        # Stage-by-stage experiment notes
 │   ├── baseline/
 │   ├── augmentation/
 │   ├── attention/
 │   └── dgcnn_sota/
-├── results/            # 训练日志与结果对比
-├── assets/meshlab/     # MeshLab 可视化截图
-└── report/             # 报告与 PPT 素材
+├── results/            # Training logs and result comparisons
+├── assets/meshlab/     # MeshLab visualization screenshots
+└── report/             # Report and PPT materials
 ```
 
 ---
 
-## Colab 最终提交入口
+## Colab Final Submission Entry
 
-如需将“最终在 Colab 运行的代码”统一放在一个目录，请直接使用 [`colab_final/`](colab_final/)。
+If you want all final Colab executable code in one place, use [`colab_final/`](colab_final/).
 
-该目录内已集中放置可直接执行的关键脚本，并附带使用说明文档：
+This directory already centralizes executable key scripts and usage documentation:
 
 - `colab_final/README.md`
 - `colab_final/colab_setup.sh`
@@ -51,24 +51,24 @@ pointcloud-course-project/
 
 ---
 
-## 1. 环境准备（Google Colab T4 GPU）
+## 1. Environment Setup (Google Colab T4 GPU)
 
-1. 新建 Colab Notebook
-2. 依次点击 **代码执行程序 → 更改运行时类型 → 硬件加速器：T4 GPU**
-3. 在 Colab 单元格中执行：
+1. Create a new Colab notebook.
+2. Select **Runtime → Change runtime type → Hardware accelerator: T4 GPU**.
+3. Run in a Colab cell:
 
 ```bash
-# 克隆 PointNet（基线模型）
+# Clone PointNet (baseline model)
 !git clone https://github.com/fxia22/pointnet.pytorch.git
 
-# 克隆 DGCNN（SOTA 对比模型）
+# Clone DGCNN (SOTA comparison model)
 !git clone https://github.com/WangYueFt/dgcnn.git
 
-# 安装 PointNet 依赖（Colab 已内置 PyTorch）
+# Install PointNet dependencies (PyTorch is preinstalled in Colab)
 !pip install -e ./pointnet.pytorch
 ```
 
-或直接运行一键脚本：
+Or run the one-command setup script:
 
 ```bash
 bash scripts/colab_setup.sh
@@ -76,17 +76,17 @@ bash scripts/colab_setup.sh
 
 ---
 
-## 2. Baseline 训练（PointNet，ModelNet40 主线）
+## 2. Baseline Training (PointNet, ModelNet40 main track)
 
-### 2.1 下载数据集
+### 2.1 Download Dataset
 
 ```bash
 bash scripts/colab_setup.sh
 ```
 
-> `colab_setup.sh` 已内置 ModelNet40 多镜像下载与自动回退机制，并会基于 ModelNet40 自动构建第二数据集 `modelnet10_ply_hdf5_2048`（无需额外下载）。
+> `colab_setup.sh` includes multi-mirror ModelNet40 download with auto-fallback, and automatically builds the second dataset `modelnet10_ply_hdf5_2048` from ModelNet40 (no extra download needed).
 
-### 2.2 训练命令
+### 2.2 Training Command
 
 ```bash
 !python scripts/train_classification_h5.py \
@@ -95,31 +95,31 @@ bash scripts/colab_setup.sh
   --dataset_type modelnet40
 ```
 
-或使用脚本：
+Or use script:
 
 ```bash
 bash scripts/train_baseline.sh
 ```
 
-> **注意**：本仓库使用 `scripts/train_classification_h5.py` 作为 PointNet 的 HDF5 兼容训练入口。
+> **Note**: This repository uses `scripts/train_classification_h5.py` as the HDF5-compatible PointNet training entry.
 
 ---
 
-## 3. 跨数据集与鲁棒性测试（基础要求 6 & 7）
+## 3. Cross-Dataset and Robustness Testing (Basic requirements 6 & 7)
 
-PointNet 典型缺点：**局部特征提取能力弱、对噪声敏感**。
+Typical PointNet weaknesses: **limited local feature extraction and sensitivity to noise**.
 
-测试方法：
-1. 在测试集数据加载函数中加入高斯抖动（Gaussian Jitter）
-2. 使用第二分类数据集进行跨数据集测试（本仓库提供基于 ModelNet40 自动构建的 ModelNet10 子集），记录准确率变化作为“缺点分析”依据
+Testing method:
+1. Add Gaussian jitter in test-set data loading.
+2. Use a second classification dataset for cross-dataset testing (this repo provides an auto-built ModelNet10 subset from ModelNet40), and record accuracy changes as evidence for weakness analysis.
 
-跨数据集训练命令（ModelNet10 子集）：
+Cross-dataset training command (ModelNet10 subset):
 
 ```bash
 bash scripts/train_cross_dataset.sh
 ```
 
-跨数据集 Advanced（ModelNet10 子集，鲁棒性验证）：
+Cross-dataset Advanced (ModelNet10 subset, robustness validation):
 
 ```bash
 bash scripts/train_advanced_modelnet10.sh
@@ -127,24 +127,24 @@ bash scripts/train_advanced_modelnet10.sh
 
 ---
 
-## 4. 进阶修改（消融实验，占 20%）
+## 4. Advanced Modifications (Ablation, 20%)
 
-### A. 数据增强
+### A. Data Augmentation
 
-在 `dataset.py` 中加入：
+Add in `dataset.py`:
 
-- `random_rotate_point_cloud`：随机旋转
-- `jitter_point_cloud`：抖动加噪
+- `random_rotate_point_cloud`: random rotation
+- `jitter_point_cloud`: jitter noise
 
-重新训练并记录精度，详见 [`experiments/augmentation/`](experiments/augmentation/)。
+Retrain and record accuracy. See [`experiments/augmentation/`](experiments/augmentation/).
 
-### B. SE-Block 通道注意力
+### B. SE-Block Channel Attention
 
-在 `pointnet.py` 特征提取层后插入轻量级 SE-Block，再次训练并记录精度变化，详见 [`experiments/attention/`](experiments/attention/)。
+Insert a lightweight SE-Block after the feature extraction layer in `pointnet.py`, retrain, and record accuracy changes. See [`experiments/attention/`](experiments/attention/).
 
 ---
 
-## 5. SOTA 对比：DGCNN（基础要求 8）
+## 5. SOTA Comparison: DGCNN (Basic requirement 8)
 
 ```bash
 !cd dgcnn/pytorch && python main.py \
@@ -153,74 +153,74 @@ bash scripts/train_advanced_modelnet10.sh
   --dataset=modelnet40
 ```
 
-或使用脚本：
+Or use script:
 
 ```bash
 bash scripts/train_dgcnn.sh
 ```
 
-详见 [`experiments/dgcnn_sota/`](experiments/dgcnn_sota/)。
+See [`experiments/dgcnn_sota/`](experiments/dgcnn_sota/).
 
 ---
 
-## 6. 必须保存的文件
+## 6. Files You Must Save
 
-| 文件 | 说明 |
+| File | Description |
 |---|---|
-| `loss.txt` | 每轮训练损失 |
-| `accuracy.txt` | 每轮验证精度 |
-| `best_model.pth` | 最佳权重文件 |
+| `loss.txt` | Per-epoch training loss |
+| `accuracy.txt` | Per-epoch validation accuracy |
+| `best_model.pth` | Best checkpoint |
 
-在 Colab 左侧文件栏找到后下载，课程提交压缩包中须包含这些文件。
+Download these files from the Colab file panel; they must be included in your course submission archive.
 
-如需一键整理并打包提交文件：
+To collect and package submission files in one command:
 
 ```bash
 bash scripts/package_final.sh
 ```
 
-如需导出 ModelNet10 Baseline vs Advanced 对比结果（新文件夹 + 压缩包）：
+To export ModelNet10 Baseline vs Advanced comparison results (new folder + zip):
 
 ```bash
 bash scripts/package_modelnet10_compare.sh
 ```
 
-> 脚本会尝试自动运行 `colab_final/plot_compare.py` 生成 3 张独立图片：`curve_compare_loss.png`、`curve_compare_accuracy.png`、`curve_compare_lr.png`（需存在 `cls/metrics.csv` 与 `cls_advanced/metrics.csv`），并将这些图片一并打包。
+> The script attempts to run `colab_final/plot_compare.py` automatically to generate 3 separate images: `curve_compare_loss.png`, `curve_compare_accuracy.png`, `curve_compare_lr.png` (requires `cls/metrics.csv` and `cls_advanced/metrics.csv`) and packages them together.
 
-会在当前仓库根目录生成：
+Generated in repository root:
 
-- `final/`（收集后的文件夹）
-- `final_submission.zip`（可直接下载上传 GitHub）
+- `final/` (collected folder)
+- `final_submission.zip` (ready to download and upload)
 
 ---
 
-## 7. 实验对比表
+## 7. Experiment Comparison Table
 
-| 实验 | Accuracy | 备注 |
+| Experiment | Accuracy | Notes |
 |---|---:|---|
-| Baseline（原始 PointNet）| | |
-| Baseline + 数据增强 | | |
-| Baseline + 数据增强 + SE-Attention | | |
-| SOTA（DGCNN） | | |
+| Baseline (original PointNet) | | |
+| Baseline + data augmentation | | |
+| Baseline + data augmentation + SE-Attention | | |
+| SOTA (DGCNN) | | |
 
-完整模板见 [`results/metrics_template.csv`](results/metrics_template.csv)。
-
----
-
-## 8. MeshLab 可视化（基础要求 5）
-
-1. 在本机安装 [MeshLab](https://www.meshlab.net/)
-2. 从 ModelNet40 中挑选典型 `.off` 文件（如 `chair`、`airplane`）
-3. 调整视角截图，保存至 [`assets/meshlab/`](assets/meshlab/)
-4. 对比展示：
-   - 原始 PointNet 误分类案例（局部细节不足）
-   - 加入 Attention / 使用 DGCNN 后正确分类的改进原因
+Full template: [`results/metrics_template.csv`](results/metrics_template.csv).
 
 ---
 
-## 参考资料
+## 8. MeshLab Visualization (Basic requirement 5)
+
+1. Install [MeshLab](https://www.meshlab.net/) locally.
+2. Select representative `.off` files from ModelNet40 (for example, `chair`, `airplane`).
+3. Adjust viewpoints and save screenshots to [`assets/meshlab/`](assets/meshlab/).
+4. Show side-by-side comparisons:
+   - Misclassification cases of original PointNet (insufficient local detail)
+   - Why attention / DGCNN improves classification
+
+---
+
+## References
 
 - [PointNet.pytorch](https://github.com/fxia22/pointnet.pytorch)
 - [DGCNN](https://github.com/WangYueFt/dgcnn)
-- [ModelNet40 数据集](https://modelnet.cs.princeton.edu/)
+- [ModelNet40 Dataset](https://modelnet.cs.princeton.edu/)
 - [MeshLab](https://www.meshlab.net/)

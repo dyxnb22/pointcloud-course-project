@@ -1,12 +1,12 @@
 # Results
 
-存放各实验的训练日志与最终结果文件。
+Stores training logs and final outputs for each experiment.
 
-## 目录规范
+## Directory Convention
 
 ```
 results/
-├── metrics_template.csv     # 结果对比表模板
+├── metrics_template.csv     # Result comparison table template
 ├── baseline/
 │   ├── loss.txt
 │   ├── accuracy.txt
@@ -22,6 +22,6 @@ results/
     └── accuracy.txt
 ```
 
-## 注意
+## Notes
 
-`.pth` 模型权重文件体积较大，如需版本管理请使用 Git LFS 或单独存储于云端（如 Google Drive）。
+`.pth` model weights can be large. For versioning, use Git LFS or store them separately in cloud storage (for example, Google Drive).

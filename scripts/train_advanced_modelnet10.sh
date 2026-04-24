@@ -1,29 +1,29 @@
 #!/usr/bin/env bash
-# train_advanced_modelnet10.sh - 在 ModelNet10 子集上运行 Advanced PointNet 训练（鲁棒性验证）
+# train_advanced_modelnet10.sh - Run Advanced PointNet on ModelNet10 subset (robustness validation)
 set -e
 
 if [ ! -d "pointnet.pytorch" ]; then
-  echo "错误：找不到 pointnet.pytorch，请先运行: bash scripts/colab_setup.sh"
+  echo "Error: pointnet.pytorch not found. Run: bash scripts/colab_setup.sh"
   exit 1
 fi
 
 DATASET_PATH="pointnet.pytorch/data/modelnet10_ply_hdf5_2048"
 if [ ! -d "${DATASET_PATH}" ]; then
-  echo "错误：找不到数据集文件夹 ${DATASET_PATH}，请先运行: bash scripts/colab_setup.sh"
+  echo "Error: dataset folder ${DATASET_PATH} not found. Run: bash scripts/colab_setup.sh"
   exit 1
 fi
 
 TRAIN_SCRIPT="scripts/train_classification_h5.py"
 if [ ! -f "${TRAIN_SCRIPT}" ]; then
-  echo "错误：找不到训练脚本 ${TRAIN_SCRIPT}，请确认仓库完整"
+  echo "Error: training script ${TRAIN_SCRIPT} not found. Please verify repository integrity"
   exit 1
 fi
 
 OUTPUT_DIR="cls_cross_advanced"
 CSV_PATH="${OUTPUT_DIR}/metrics.csv"
-DATASET_TYPE="modelnet40" # HDF5 训练入口仅支持 modelnet40 分支，ModelNet10 子集同样使用该分支
+DATASET_TYPE="modelnet40" # HDF5 training entry supports modelnet40 branch only; ModelNet10 subset also uses this branch
 
-echo "==> 开始训练 PointNet Advanced（ModelNet10 子集，label smoothing + scale augment + feature transform）..."
+echo "==> Starting PointNet Advanced training (ModelNet10 subset, label smoothing + scale augment + feature transform)..."
 python "${TRAIN_SCRIPT}" \
   --dataset "${DATASET_PATH}" \
   --nepoch=20 \
@@ -40,10 +40,10 @@ python "${TRAIN_SCRIPT}" \
   --meshlab_samples_per_epoch 6
 
 echo ""
-echo "==> ModelNet10 Advanced 训练完成。输出文件："
-echo "    模型权重: ${OUTPUT_DIR}/cls_model_*.pth"
-echo "    最优模型: ${OUTPUT_DIR}/best_model.pth"
-echo "    每轮指标: ${CSV_PATH}"
-echo "    每轮loss: ${OUTPUT_DIR}/loss.txt"
-echo "    每轮acc : ${OUTPUT_DIR}/accuracy.txt"
-echo "    MeshLab  : ${OUTPUT_DIR}/meshlab_ply/*.ply"
+echo "==> ModelNet10 Advanced training finished. Output files:"
+echo "    Model checkpoints: ${OUTPUT_DIR}/cls_model_*.pth"
+echo "    Best model       : ${OUTPUT_DIR}/best_model.pth"
+echo "    Per-epoch metrics: ${CSV_PATH}"
+echo "    Per-epoch loss   : ${OUTPUT_DIR}/loss.txt"
+echo "    Per-epoch acc    : ${OUTPUT_DIR}/accuracy.txt"
+echo "    MeshLab exports  : ${OUTPUT_DIR}/meshlab_ply/*.ply"

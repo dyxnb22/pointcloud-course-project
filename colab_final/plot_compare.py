@@ -2,21 +2,21 @@
 # -*- coding: utf-8 -*-
 
 """
-最终版：对比 baseline 与 advanced 的训练曲线（loss / acc / lr）
+Final version: compare baseline and advanced training curves (loss / acc / lr)
 
-默认读取：
+Default inputs:
   - cls/metrics.csv
   - cls_advanced/metrics.csv
 
-兼容列名：
+Compatible column names:
   - epoch
   - train_loss
   - train_acc
-  - test_acc 列支持: test_acc 或 val_acc
-  - test_loss 列支持: test_loss 或 val_loss
-  - lr 列支持: lr 或 learning_rate
+  - test_acc supports: test_acc or val_acc
+  - test_loss supports: test_loss or val_loss
+  - lr supports: lr or learning_rate
 
-用法：
+Usage:
   python plot_compare.py
   python plot_compare.py --baseline cls/metrics.csv --advanced cls_advanced/metrics.csv --out curve_compare.png
 """
@@ -38,11 +38,11 @@ def _find_col(df, candidates):
 
 def load_metrics(csv_path: str, tag: str) -> pd.DataFrame:
     if not os.path.exists(csv_path):
-        raise FileNotFoundError(f"[{tag}] 文件不存在: {csv_path}")
+        raise FileNotFoundError(f"[{tag}] File not found: {csv_path}")
 
     df = pd.read_csv(csv_path)
     if df.empty:
-        raise ValueError(f"[{tag}] CSV 为空: {csv_path}")
+        raise ValueError(f"[{tag}] CSV is empty: {csv_path}")
 
     col_epoch = _find_col(df, ["epoch"])
     col_train_loss = _find_col(df, ["train_loss"])
@@ -59,7 +59,7 @@ def load_metrics(csv_path: str, tag: str) -> pd.DataFrame:
     if col_test_loss is None: missing.append("test_loss/val_loss")
     if col_lr is None: missing.append("lr/learning_rate")
     if missing:
-        raise ValueError(f"[{tag}] 缺少必要列: {', '.join(missing)}")
+        raise ValueError(f"[{tag}] Missing required columns: {', '.join(missing)}")
 
     out = pd.DataFrame({
         "epoch": pd.to_numeric(df[col_epoch], errors="coerce"),
@@ -73,7 +73,7 @@ def load_metrics(csv_path: str, tag: str) -> pd.DataFrame:
     out = out.dropna(subset=["epoch", "train_loss", "train_acc", "test_loss", "test_acc", "lr"]).copy()
     out = out.sort_values("epoch")
     if out.empty:
-        raise ValueError(f"[{tag}] 清洗后无有效数据，请检查 CSV 数值格式: {csv_path}")
+        raise ValueError(f"[{tag}] No valid rows remain after cleaning, please check CSV numeric format: {csv_path}")
 
     return out
 
@@ -111,18 +111,18 @@ def build_output_paths(out_path: str):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--baseline", default="cls/metrics.csv", help="baseline metrics.csv 路径")
-    parser.add_argument("--advanced", default="cls_advanced/metrics.csv", help="advanced metrics.csv 路径")
-    parser.add_argument("--out", default="curve_compare.png", help="输出图片前缀（会生成 *_loss/*_accuracy/*_lr）")
-    parser.add_argument("--title", default="Training Curves: Baseline vs Advanced", help="总标题")
-    parser.add_argument("--dpi", type=int, default=220, help="保存图片 DPI")
+    parser.add_argument("--baseline", default="cls/metrics.csv", help="Path to baseline metrics.csv")
+    parser.add_argument("--advanced", default="cls_advanced/metrics.csv", help="Path to advanced metrics.csv")
+    parser.add_argument("--out", default="curve_compare.png", help="Output basename (generates *_loss/*_accuracy/*_lr)")
+    parser.add_argument("--title", default="Training Curves: Baseline vs Advanced", help="Figure title")
+    parser.add_argument("--dpi", type=int, default=220, help="Saved image DPI")
     args = parser.parse_args()
 
     try:
         b = load_metrics(args.baseline, "Baseline")
         a = load_metrics(args.advanced, "Advanced")
     except Exception as e:
-        print(f"[错误] {e}")
+        print(f"[ERROR] {e}")
         sys.exit(1)
 
     print("=== Metrics Summary ===")
@@ -132,7 +132,7 @@ def main():
 
     outputs = build_output_paths(args.out)
 
-    # Loss 图
+    # Loss plot
     fig, ax = plt.subplots(figsize=(6.5, 5))
     ax.plot(b["epoch"], b["train_loss"], label="Baseline train_loss", linewidth=2)
     ax.plot(a["epoch"], a["train_loss"], label="Advanced train_loss", linewidth=2)
@@ -147,7 +147,7 @@ def main():
     fig.savefig(outputs["loss"], dpi=args.dpi)
     plt.close(fig)
 
-    # Accuracy 图
+    # Accuracy plot
     fig, ax = plt.subplots(figsize=(6.5, 5))
     ax.plot(b["epoch"], b["train_acc"], label="Baseline train_acc", linewidth=2)
     ax.plot(b["epoch"], b["test_acc"], "--", label="Baseline test_acc", linewidth=1.8)
@@ -162,7 +162,7 @@ def main():
     fig.savefig(outputs["accuracy"], dpi=args.dpi)
     plt.close(fig)
 
-    # LR 图
+    # LR plot
     fig, ax = plt.subplots(figsize=(6.5, 5))
     ax.plot(b["epoch"], b["lr"], label="Baseline lr", linewidth=2)
     ax.plot(a["epoch"], a["lr"], label="Advanced lr", linewidth=2)
@@ -175,7 +175,7 @@ def main():
     fig.savefig(outputs["lr"], dpi=args.dpi)
     plt.close(fig)
 
-    print("\n✅ 已保存对比图:")
+    print("\n✅ Saved comparison plots:")
     print(f"  - {outputs['loss']}")
     print(f"  - {outputs['accuracy']}")
     print(f"  - {outputs['lr']}")

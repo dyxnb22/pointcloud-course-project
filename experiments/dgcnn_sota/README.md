@@ -1,19 +1,19 @@
-# DGCNN SOTA 对比实验
+# DGCNN SOTA Comparison Experiment
 
-使用 DGCNN（Dynamic Graph CNN）在 ModelNet40 上进行训练，获取 SOTA 级别的分类精度，用于与 PointNet 系列实验对比。
+Train DGCNN (Dynamic Graph CNN) on ModelNet40 to obtain SOTA-level classification accuracy for comparison against the PointNet series.
 
-## 训练命令
+## Training Command
 
 ```bash
 bash scripts/train_dgcnn.sh
 ```
 
-## 记录指标
+## Metrics to Record
 
-- 最终 Accuracy：
-- 相比 Baseline (PointNet) 变化：
+- Final accuracy:
+- Change vs baseline (PointNet):
 
-## 参考
+## References
 
-- 论文：[Dynamic Graph CNN for Learning on Point Clouds (DGCNN)](https://arxiv.org/abs/1801.07829)
-- 代码：[WangYueFt/dgcnn](https://github.com/WangYueFt/dgcnn)
+- Paper: [Dynamic Graph CNN for Learning on Point Clouds (DGCNN)](https://arxiv.org/abs/1801.07829)
+- Code: [WangYueFt/dgcnn](https://github.com/WangYueFt/dgcnn)

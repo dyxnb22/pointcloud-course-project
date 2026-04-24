@@ -1,13 +1,13 @@
-# 数据增强实验
+# Data Augmentation Experiment
 
-在 Baseline 基础上，对数据加载器引入随机旋转（Random Rotation）和抖动加噪（Jitter），观察对分类精度的影响。
+Based on the baseline, add Random Rotation and Jitter noise in the data loader and observe their impact on classification accuracy.
 
-## 主要修改
+## Main Changes
 
-- `dataset.py` 中增加 `random_rotate_point_cloud` 函数
-- `dataset.py` 中增加 `jitter_point_cloud` 函数
+- Add `random_rotate_point_cloud` in `dataset.py`
+- Add `jitter_point_cloud` in `dataset.py`
 
-## 记录指标
+## Metrics to Record
 
-- 最终 Accuracy：
-- 相比 Baseline 变化：
+- Final accuracy:
+- Change vs baseline:

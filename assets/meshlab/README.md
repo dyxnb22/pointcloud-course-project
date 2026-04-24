@@ -1,18 +1,18 @@
-# MeshLab 可视化素材
+# MeshLab Visualization Assets
 
-存放使用 MeshLab 对 ModelNet40 点云/网格文件进行可视化的截图。
+Store screenshots created by visualizing ModelNet40 point cloud/mesh files in MeshLab.
 
-## 操作步骤
+## Steps
 
-1. 在个人电脑上安装开源 3D 软件 [MeshLab](https://www.meshlab.net/)
-2. 从 ModelNet40 数据集中挑选典型 `.off` 文件（如 `chair`、`airplane`）
-3. 使用 MeshLab 打开文件，调整视角并截图
-4. 将截图保存至本目录，命名示例：
-   - `chair_correct.png` — 正确分类样本
-   - `chair_misclassified.png` — 误分类样本（原始 PointNet）
+1. Install the open-source 3D software [MeshLab](https://www.meshlab.net/) on your computer.
+2. Select representative `.off` files from ModelNet40 (for example: `chair`, `airplane`).
+3. Open files in MeshLab, adjust the camera, and take screenshots.
+4. Save screenshots in this directory, for example:
+   - `chair_correct.png` — correctly classified sample
+   - `chair_misclassified.png` — misclassified sample (original PointNet)
 
-## 展示逻辑
+## Presentation Logic
 
-对比展示：
-- 原始 PointNet 将某类目标误分类的截图及原因（局部细节提取不足）
-- 加入 Attention / 使用 DGCNN 后正确分类的截图及改进原因
+Show side-by-side comparisons:
+- Misclassification examples from original PointNet and why they fail (insufficient local detail extraction)
+- Correct classifications after adding Attention / using DGCNN and why they improve

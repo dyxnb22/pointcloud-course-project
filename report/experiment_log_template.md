@@ -1,34 +1,34 @@
-# 实验日志模板
+# Experiment Log Template
 
-## 1. 基本信息
+## 1. Basic Information
 
-- 日期：
-- 实验名称：
-- 运行平台：Google Colab（T4 GPU）
-- 代码版本（commit）：
+- Date:
+- Experiment name:
+- Platform: Google Colab (T4 GPU)
+- Code version (commit):
 
-## 2. 配置
+## 2. Configuration
 
-- 数据集：
-- Epoch：
-- Batch Size：
-- 学习率：
-- 其他关键参数：
+- Dataset:
+- Epochs:
+- Batch size:
+- Learning rate:
+- Other key parameters:
 
-## 3. 结果
+## 3. Results
 
-- 最终 Accuracy：
-- 最佳 Accuracy：
-- Loss 变化摘要：
+- Final accuracy:
+- Best accuracy:
+- Loss trend summary:
 
-## 4. 现象与分析
+## 4. Observations and Analysis
 
-- 训练是否稳定：
-- 误分类样本类型：
-- 可能原因：
+- Is training stable?
+- Types of misclassified samples:
+- Possible reasons:
 
-## 5. 下一步改进
+## 5. Next Improvements
 
-- [ ] 数据增强（Random Rotation + Jitter）
-- [ ] 网络结构改进（SE-Block 通道注意力）
-- [ ] 鲁棒性测试（噪声 / 跨数据集）
+- [ ] Data augmentation (Random Rotation + Jitter)
+- [ ] Network improvement (SE-Block channel attention)
+- [ ] Robustness testing (noise / cross-dataset)

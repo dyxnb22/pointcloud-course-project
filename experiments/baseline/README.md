@@ -1,15 +1,15 @@
-# Baseline 实验
+# Baseline Experiment
 
-使用原始 PointNet 在 ModelNet40 数据集上进行分类训练，作为后续对比实验的基准。
+Train the original PointNet on ModelNet40 as the baseline for later comparison experiments.
 
-## 训练命令
+## Training Command
 
 ```bash
 bash scripts/train_baseline.sh
 ```
 
-## 记录指标
+## Metrics to Record
 
-- 最终 Accuracy：
-- 最佳 Accuracy：
-- 训练 Epoch 数：20
+- Final accuracy:
+- Best accuracy:
+- Number of training epochs: 20
